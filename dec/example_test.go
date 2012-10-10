@@ -11,7 +11,7 @@ func ExampleDec_SetString() {
 	d := new(dec.Dec)
 	d.SetString("012345.67890") // decimal; leading 0 ignored; trailing 0 kept
 	fmt.Println(d)
-	// Output: 12345.67890 break test
+	// Output: 12345.67890
 }
 
 func ExampleDec_Scan() {

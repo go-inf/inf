@@ -36,7 +36,7 @@ func ExampleDec_Quo_scaleFixed2RoundDown() {
 	// Output: 3.33
 }
 
-func ExampleDec_Quo_scaleFixed0RoundCeil() {
+func ExampleDec_Quo_scaleFixed2RoundCeil() {
 	// -42 / 400 is an finite decimal with 3 digits beyond the decimal point
 	x, y := dec.NewDecInt64(-42), dec.NewDecInt64(400)
 	// use 2 digits beyond decimal point, round towards positive infinity

@@ -1,0 +1,10 @@
+godec: multi-precision decimal arithmetic for go
+
+The API and the implementation are based on and complement those in the
+multi-precision integer (Int) implementation in the Go library (math/big).
+
+Limitations:
+Support for formatting options is currently missing.
+There is no support for potentially lossy conversions (e.g. float64 to Dec,
+Dec to int64, or Dec to float64) as the requirements for these usually differ
+depending on the use case.

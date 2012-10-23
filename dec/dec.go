@@ -58,9 +58,18 @@ type Scale int32
 
 const scaleSize = 4 // bytes in a Scale value
 
-// Scaler represents a function that returns the scale for the result of an
-// operation on x and y.
-type Scaler func(x *Dec, y *Dec) (scale Scale)
+// Scaler represents a method for obtaining the scale to use for the result of
+// an operation on x and y.
+type Scaler interface {
+	Scale(x *Dec, y *Dec) Scale
+}
+
+// Scale() for a Scale value always returns the Scale value. This allows a Scale
+// value to be used as a Scaler when the desired scale is independent of the
+// values x and y.
+func (s Scale) Scale(x *Dec, y *Dec) Scale {
+	return s
+}
 
 // Rounder represents a method for rounding the (possibly infinite decimal)
 // result of a division to a finite Dec. It is used by Quo().
@@ -229,7 +238,7 @@ func (z *Dec) Mul(x, y *Dec) *Dec {
 //
 // See Rounder for details on the various ways for rounding.
 func (z *Dec) Quo(x, y *Dec, scaler Scaler, rounder Rounder) *Dec {
-	s := scaler(x, y)
+	s := scaler.Scale(x, y)
 	var zzz *Dec
 	if rounder.UseRemainder() {
 		zz, rA, rB := new(Dec).quoRem(x, y, s, true, new(big.Int), new(big.Int))
@@ -302,27 +311,14 @@ func (z *Dec) quoRem(x, y *Dec, s Scale, useRem bool,
 	return z, remNum, remDen
 }
 
-// ScaleFixed returns a Scaler with the given fixed result.
-func ScaleFixed(scale Scale) Scaler {
-	return func(x, y *Dec) Scale {
-		return scale
-	}
-}
-
-// ScaleFixed0 is a Scaler that always returns 0. It is intended to be used 
-// with Quo when the result is to be rounded to an integer. 
-var ScaleFixed0 Scaler = ScaleFixed(0)
-
-// ScaleFixed2 is a Scaler that always returns 2. It is intended to be used 
-// with Quo when the result is to be rounded to an decimal with scale 2. 
-var ScaleFixed2 Scaler = ScaleFixed(2)
-
 // ScaleQuoExact is the Scaler used by QuoExact. It returns a scale that is
 // greater than or equal to "x.Scale() - y.Scale()"; it is calculated so that
 // the remainder will be zero whenever x/y is a finite decimal.
-var ScaleQuoExact Scaler = scaleQuoExact
+var ScaleQuoExact Scaler = scaleQuoExact{}
 
-func scaleQuoExact(x, y *Dec) Scale {
+type scaleQuoExact struct{}
+
+func (sqe scaleQuoExact) Scale(x, y *Dec) Scale {
 	rem := new(big.Rat).SetFrac(x.Unscaled(), y.Unscaled())
 	f2, f5 := factor2(rem.Denom()), factor(rem.Denom(), bigInt[5])
 	var f10 Scale
@@ -381,7 +377,7 @@ var RoundExact Rounder = roundExact
 // absolute value not exceeding that of the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundDown).
+// Quo(x, y, Scale(scale), RoundDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -408,7 +404,7 @@ var RoundDown Rounder = roundDown
 // rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundUp).
+// Quo(x, y, Scale(scale), RoundUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -434,7 +430,7 @@ var RoundUp Rounder = roundUp
 // rounds to the Dec with the lower absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundHalfDown).
+// Quo(x, y, Scale(scale), RoundHalfDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -460,7 +456,7 @@ var RoundHalfDown Rounder = roundHalfDown
 // rounds to the Dec with the greater absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundHalfUp).
+// Quo(x, y, Scale(scale), RoundHalfUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -486,7 +482,7 @@ var RoundHalfUp Rounder = roundHalfUp
 // Dec not exceeding the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundFloor).
+// Quo(x, y, Scale(scale), RoundFloor).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -512,7 +508,7 @@ var RoundFloor Rounder = roundFloor
 // smallest Dec not smaller than the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, ScaleFixed(scale), RoundCeil).
+// Quo(x, y, Scale(scale), RoundCeil).
 //
 //      x      y    scale   result
 //  ------------------------------

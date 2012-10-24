@@ -132,7 +132,7 @@ func TestDecQuoRem(t *testing.T) {
 	}
 }
 
-var rounderInputs = [...]struct {
+var decRounderInputs = [...]struct {
 	quo    *Dec
 	rA, rB *big.Int
 }{
@@ -157,9 +157,9 @@ var rounderInputs = [...]struct {
 	{NewDec(big.NewInt(1), 1), big.NewInt(8), big.NewInt(10)},
 }
 
-var rounderResults = [...]struct {
+var decRounderResults = [...]struct {
 	rounder Rounder
-	results [len(rounderInputs)]*Dec
+	results [len(decRounderInputs)]*Dec
 }{
 	{RoundExact, [...]*Dec{nil, nil, nil, nil,
 		nil, nil, nil, nil, nil, nil,
@@ -208,9 +208,9 @@ var rounderResults = [...]struct {
 		NewDec(big.NewInt(2), 1), NewDec(big.NewInt(2), 1), NewDec(big.NewInt(2), 1)}},
 }
 
-func TestRound(t *testing.T) {
-	for i, a := range rounderResults {
-		for j, input := range rounderInputs {
+func TestDecRounders(t *testing.T) {
+	for i, a := range decRounderResults {
+		for j, input := range decRounderInputs {
 			q := new(Dec).Set(input.quo)
 			rA, rB := new(big.Int).Set(input.rA), new(big.Int).Set(input.rB)
 			res := a.rounder.Round(new(Dec), q, rA, rB)
@@ -222,6 +222,33 @@ func TestRound(t *testing.T) {
 				a.results[j].Cmp(res) != 0 {
 				t.Errorf("#%d,%d Rounder got %v; expected %v", i, j, res, a.results[j])
 			}
+		}
+	}
+}
+
+var decRoundTests = [...]struct {
+	in  *Dec
+	s   Scale
+	r   Rounder
+	exp *Dec
+}{
+	{NewDec(big.NewInt(123424999999999993), 15), 2, RoundHalfUp, NewDec(big.NewInt(12342), 2)},
+	{NewDec(big.NewInt(123425000000000001), 15), 2, RoundHalfUp, NewDec(big.NewInt(12343), 2)},
+	{NewDec(big.NewInt(123424999999999993), 15), 15, RoundHalfUp, NewDec(big.NewInt(123424999999999993), 15)},
+	{NewDec(big.NewInt(123424999999999993), 15), 16, RoundHalfUp, NewDec(big.NewInt(1234249999999999930), 16)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -1, RoundHalfUp, NewDec(big.NewInt(1844674407370955162), -1)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -2, RoundHalfUp, NewDec(big.NewInt(184467440737095516), -2)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -3, RoundHalfUp, NewDec(big.NewInt(18446744073709552), -3)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -4, RoundHalfUp, NewDec(big.NewInt(1844674407370955), -4)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -5, RoundHalfUp, NewDec(big.NewInt(184467440737096), -5)},
+	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -6, RoundHalfUp, NewDec(big.NewInt(18446744073710), -6)},
+}
+
+func TestDecRound(t *testing.T) {
+	for i, tt := range decRoundTests {
+		z := new(Dec).Round(tt.in, tt.s, tt.r)
+		if tt.exp.Cmp(z) != 0 {
+			t.Errorf("#%d Round got %v; expected %v", i, z, tt.exp)
 		}
 	}
 }

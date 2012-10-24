@@ -72,7 +72,8 @@ func (s Scale) Scale(x *Dec, y *Dec) Scale {
 }
 
 // Rounder represents a method for rounding the (possibly infinite decimal)
-// result of a division to a finite Dec. It is used by Quo().
+// result of a division to a finite Dec. It is used by Dec.Round() and
+// Dec.Quo().
 //
 type Rounder interface {
 
@@ -226,6 +227,12 @@ func (z *Dec) Mul(x, y *Dec) *Dec {
 	z.SetScale(x.Scale() + y.Scale())
 	z.Unscaled().Mul(x.Unscaled(), y.Unscaled())
 	return z
+}
+
+// Round sets z to the value of x rounded to Scale s using Rounder r, and
+// returns z.
+func (z *Dec) Round(x *Dec, s Scale, r Rounder) *Dec {
+	return z.Quo(x, NewDecInt64(1), s, r)
 }
 
 // Quo sets z to the quotient x/y, with the scale obtained from the given

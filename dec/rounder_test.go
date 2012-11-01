@@ -65,6 +65,13 @@ var decRounderResults = [...]struct {
 		NewDec(big.NewInt(0), 1),
 		NewDec(big.NewInt(0), 1), NewDec(big.NewInt(1), 1), NewDec(big.NewInt(1), 1),
 		NewDec(big.NewInt(1), 1), NewDec(big.NewInt(2), 1), NewDec(big.NewInt(2), 1)}},
+	{RoundHalfEven, [...]*Dec{
+		NewDecInt64(2), NewDecInt64(-2), NewDecInt64(-2), NewDecInt64(2),
+		NewDec(big.NewInt(-2), 1), NewDec(big.NewInt(-2), 1), NewDec(big.NewInt(-1), 1),
+		NewDec(big.NewInt(-1), 1), NewDec(big.NewInt(0), 1), NewDec(big.NewInt(0), 1),
+		NewDec(big.NewInt(0), 1),
+		NewDec(big.NewInt(0), 1), NewDec(big.NewInt(0), 1), NewDec(big.NewInt(1), 1),
+		NewDec(big.NewInt(1), 1), NewDec(big.NewInt(2), 1), NewDec(big.NewInt(2), 1)}},
 	{RoundFloor, [...]*Dec{
 		NewDecInt64(1), NewDecInt64(-2), NewDecInt64(-2), NewDecInt64(1),
 		NewDec(big.NewInt(-2), 1), NewDec(big.NewInt(-2), 1), NewDec(big.NewInt(-2), 1),

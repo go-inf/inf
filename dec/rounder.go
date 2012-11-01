@@ -156,6 +156,32 @@ var RoundHalfDown Rounder = roundHalfDown
 //
 var RoundHalfUp Rounder = roundHalfUp
 
+// RoundHalfEven rounds to the nearest Dec, and when the remainder is 1/2, it
+// rounds to the Dec with even last digit.
+//
+// The following table shows examples of the results for
+// Quo(x, y, Scale(scale), RoundHalfEven).
+//
+//      x      y    scale   result
+//  ------------------------------
+//    -1.8    10        1     -0.2
+//    -1.5    10        1     -0.2
+//    -1.2    10        1     -0.1
+//    -1.0    10        1     -0.1
+//    -0.8    10        1     -0.1
+//    -0.5    10        1     -0.0
+//    -0.2    10        1     -0.0
+//     0.0    10        1      0.0
+//     0.2    10        1      0.0
+//     0.5    10        1      0.0
+//     0.8    10        1      0.1
+//     1.0    10        1      0.1
+//     1.2    10        1      0.1
+//     1.5    10        1      0.2
+//     1.8    10        1      0.2
+//
+var RoundHalfEven Rounder = roundHalfEven
+
 // RoundFloor rounds towards negative infinity; that is, returns the greatest
 // Dec not exceeding the result represented by quo and rem.
 //
@@ -278,6 +304,36 @@ var roundHalfUp = rounder{true,
 				rA2.Neg(rA2)
 			}
 			if rA2.Cmp(rB)*srB >= 0 {
+				adjust = true
+			}
+		} else {
+			// brA > brB-1 => |rA| > |rB/2|
+			adjust = true
+		}
+		if adjust {
+			z.Unscaled().Add(z.Unscaled(), intSign[s+1])
+		}
+		return z
+	}}
+
+var roundHalfEven = rounder{true,
+	func(z, q *Dec, rA, rB *big.Int) *Dec {
+		z.move(q)
+		brA, brB := rA.BitLen(), rB.BitLen()
+		if brA < brB-1 {
+			// brA < brB-1 => |rA| < |rB/2|
+			return z
+		}
+		adjust := false
+		srA, srB := rA.Sign(), rB.Sign()
+		s := srA * srB
+		if brA == brB-1 {
+			rA2 := new(big.Int).Lsh(rA, 1)
+			if s < 0 {
+				rA2.Neg(rA2)
+			}
+			c := rA2.Cmp(rB) * srB
+			if c > 0 || c == 0 && z.Unscaled().Bit(0) == 1 {
 				adjust = true
 			}
 		} else {

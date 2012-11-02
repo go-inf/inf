@@ -258,15 +258,15 @@ var roundUp = rounder{true,
 		return z
 	}}
 
-var roundHalfDown = rounder{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
+func roundHalf(f func(c int, odd uint) (roundUp bool)) func(z, q *Dec, rA, rB *big.Int) *Dec {
+	return func(z, q *Dec, rA, rB *big.Int) *Dec {
 		z.move(q)
 		brA, brB := rA.BitLen(), rB.BitLen()
 		if brA < brB-1 {
 			// brA < brB-1 => |rA| < |rB/2|
 			return z
 		}
-		adjust := false
+		roundUp := false
 		srA, srB := rA.Sign(), rB.Sign()
 		s := srA * srB
 		if brA == brB-1 {
@@ -274,77 +274,32 @@ var roundHalfDown = rounder{true,
 			if s < 0 {
 				rA2.Neg(rA2)
 			}
-			if rA2.Cmp(rB)*srB > 0 {
-				adjust = true
-			}
+			roundUp = f(rA2.Cmp(rB)*srB, z.Unscaled().Bit(0))
 		} else {
 			// brA > brB-1 => |rA| > |rB/2|
-			adjust = true
+			roundUp = true
 		}
-		if adjust {
+		if roundUp {
 			z.Unscaled().Add(z.Unscaled(), intSign[s+1])
 		}
 		return z
-	}}
+	}
+}
 
-var roundHalfUp = rounder{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
-		brA, brB := rA.BitLen(), rB.BitLen()
-		if brA < brB-1 {
-			// brA < brB-1 => |rA| < |rB/2|
-			return z
-		}
-		adjust := false
-		srA, srB := rA.Sign(), rB.Sign()
-		s := srA * srB
-		if brA == brB-1 {
-			rA2 := new(big.Int).Lsh(rA, 1)
-			if s < 0 {
-				rA2.Neg(rA2)
-			}
-			if rA2.Cmp(rB)*srB >= 0 {
-				adjust = true
-			}
-		} else {
-			// brA > brB-1 => |rA| > |rB/2|
-			adjust = true
-		}
-		if adjust {
-			z.Unscaled().Add(z.Unscaled(), intSign[s+1])
-		}
-		return z
-	}}
+var roundHalfDown = rounder{true, roundHalf(
+	func(c int, odd uint) bool {
+		return c > 0
+	})}
 
-var roundHalfEven = rounder{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
-		brA, brB := rA.BitLen(), rB.BitLen()
-		if brA < brB-1 {
-			// brA < brB-1 => |rA| < |rB/2|
-			return z
-		}
-		adjust := false
-		srA, srB := rA.Sign(), rB.Sign()
-		s := srA * srB
-		if brA == brB-1 {
-			rA2 := new(big.Int).Lsh(rA, 1)
-			if s < 0 {
-				rA2.Neg(rA2)
-			}
-			c := rA2.Cmp(rB) * srB
-			if c > 0 || c == 0 && z.Unscaled().Bit(0) == 1 {
-				adjust = true
-			}
-		} else {
-			// brA > brB-1 => |rA| > |rB/2|
-			adjust = true
-		}
-		if adjust {
-			z.Unscaled().Add(z.Unscaled(), intSign[s+1])
-		}
-		return z
-	}}
+var roundHalfUp = rounder{true, roundHalf(
+	func(c int, odd uint) bool {
+		return c >= 0
+	})}
+
+var roundHalfEven = rounder{true, roundHalf(
+	func(c int, odd uint) bool {
+		return c > 0 || c == 0 && odd == 1
+	})}
 
 var roundFloor = rounder{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {

@@ -1,4 +1,4 @@
-package dec
+package inf
 
 // This file implements signed multi-precision decimals.
 

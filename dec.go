@@ -15,7 +15,7 @@
 // Quotient (division) operation uses Scalers and Rounders to specify the
 // desired behavior. See Quo, Scaler, and Rounder for details.
 //
-package dec
+package inf
 
 // This file implements signed multi-precision decimals.
 

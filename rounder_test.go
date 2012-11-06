@@ -1,4 +1,4 @@
-package dec
+package inf
 
 import (
 	"math/big"

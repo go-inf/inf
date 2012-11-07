@@ -1,7 +1,23 @@
-// Package dec implements multi-precision decimal arithmetic.
-// It supports the numeric type Dec for signed decimals.
-// It is based on and complements the multi-precision integer implementation
-// (Int) in the Go library (math/big).
+// Package inf (type inf.Dec) implements "infinite-precision" decimal
+// arithmetic.
+// "Infinite precision" describes two characteristics: practically unlimited
+// precision for decimal number representation and no support for calculating
+// with any specific fixed precision.
+// (Although there is no practical limit on precision, inf.Dec can only
+// represent finite decimals.)
+//
+// This package is currently in experimental stage and the API may change.
+//
+// This package does NOT support:
+//  - rounding to specific precisions (as opposed to specific decimal positions)
+//  - the notion of context (each rounding must be explicit)
+//  - NaN and Inf values, and distinguishing between positive and negative zero
+//  - conversions to and from float32/64 types
+//
+// Features considered for possible addition:
+//  + formatting options
+//  + Exp method
+//  + exchanging data in decimal32/64/128 formats
 //
 // Methods are typically of the form:
 //
@@ -17,8 +33,6 @@
 //
 package inf
 
-// This file implements signed multi-precision decimals.
-
 import (
 	"fmt"
 	"io"
@@ -26,9 +40,14 @@ import (
 	"strings"
 )
 
-// A Dec represents a signed multi-precision decimal.
-// It is stored as a combination of a multi-precision big.Int unscaled value
-// and a fixed-precision scale of type Scale.
+// A Dec represents a signed arbitrary-precision decimal.
+// It is a combination of a sign, an arbitrary-precision integer coefficient
+// value, and a signed fixed-precision exponent value.
+// The sign and the coefficient value are handled together as a signed value
+// and referred to as the unscaled value.
+// (Positive and negative zero values are not distinguished.)
+// Since the exponent is most commonly negative, it is handled in negated form
+// and referred to as scale.
 //
 // The mathematical value of a Dec equals:
 //

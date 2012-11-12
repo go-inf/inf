@@ -17,19 +17,8 @@
 // Features considered for possible addition:
 //  + formatting options
 //  + Exp method
+//  + combined operations such as AddRound/MulAdd etc
 //  + exchanging data in decimal32/64/128 formats
-//
-// Methods are typically of the form:
-//
-//	func (z *Dec) Op(x, y *Dec) *Dec
-//
-// and implement operations z = x Op y with the result as receiver; if it
-// is one of the operands it may be overwritten (and its memory reused).
-// To enable chaining of operations, the result is also returned. Methods
-// returning a result other than *Dec take one of the operands as the receiver.
-//
-// Quotient (division) operation uses Scalers and Rounders to specify the
-// desired behavior. See Quo, Scaler, and Rounder for details.
 //
 package inf
 
@@ -67,6 +56,23 @@ import (
 //
 // The zero value for a Dec represents the value 0 with scale 0.
 //
+// Methods are typically of the form:
+//
+//	func (z *Dec) Op(x, y *Dec) *Dec
+//
+// and implement operations z = x Op y with the result as receiver; if it
+// is one of the operands it may be overwritten (and its memory reused).
+// To enable chaining of operations, the result is also returned. Methods
+// returning a result other than *Dec take one of the operands as the receiver.
+//
+// A "bare" Quo method (quotient / division operation) is not provided, as the
+// result is not always a finite decimal and thus in general cannot be
+// represented as a Dec.
+// Instead, in the common case when rounding is (potentially) necessary,
+// QuoRound should be used with a Scale and a Rounder.
+// QuoExact or QuoRound with RoundExact can be used in the special cases when it
+// is known that the result is always a finite decimal.
+//
 type Dec struct {
 	unscaled big.Int
 	scale    Scale
@@ -79,15 +85,8 @@ const scaleSize = 4 // bytes in a Scale value
 
 // Scaler represents a method for obtaining the scale to use for the result of
 // an operation on x and y.
-type Scaler interface {
+type scaler interface {
 	Scale(x *Dec, y *Dec) Scale
-}
-
-// Scale() for a Scale value always returns the Scale value. This allows a Scale
-// value to be used as a Scaler when the desired scale is independent of the
-// values x and y.
-func (s Scale) Scale(x *Dec, y *Dec) Scale {
-	return s
 }
 
 var bigInt = [...]*big.Int{
@@ -226,27 +225,31 @@ func (z *Dec) Mul(x, y *Dec) *Dec {
 // Round sets z to the value of x rounded to Scale s using Rounder r, and
 // returns z.
 func (z *Dec) Round(x *Dec, s Scale, r Rounder) *Dec {
-	return z.Quo(x, NewDecInt64(1), s, r)
+	return z.QuoRound(x, NewDecInt64(1), s, r)
 }
 
-// Quo sets z to the quotient x/y, with the scale obtained from the given
-// Scaler, rounded using the given Rounder.
-// If the result from the rounder is nil, Quo also returns nil, and the value
-// of z is undefined.
+// QuoRound sets z to the quotient x/y, rounded using the given Rounder to the
+// specified scale.
+//
+// If the rounder is RoundExact but the result can not be expressed exactly at
+// the specified scale, QuoRound returns nil, and the value of z is undefined.
 //
 // There is no corresponding Div method; the equivalent can be achieved through
 // the choice of Rounder used.
 //
-// See Rounder for details on the various ways for rounding.
-func (z *Dec) Quo(x, y *Dec, scaler Scaler, rounder Rounder) *Dec {
-	s := scaler.Scale(x, y)
+func (z *Dec) QuoRound(x, y *Dec, s Scale, r Rounder) *Dec {
+	return z.quo(x, y, sclr{s}, r)
+}
+
+func (z *Dec) quo(x, y *Dec, s scaler, r Rounder) *Dec {
+	scl := s.Scale(x, y)
 	var zzz *Dec
-	if rounder.UseRemainder() {
-		zz, rA, rB := new(Dec).quoRem(x, y, s, true, new(big.Int), new(big.Int))
-		zzz = rounder.Round(new(Dec), zz, rA, rB)
+	if r.UseRemainder() {
+		zz, rA, rB := new(Dec).quoRem(x, y, scl, true, new(big.Int), new(big.Int))
+		zzz = r.Round(new(Dec), zz, rA, rB)
 	} else {
-		zz, _, _ := new(Dec).quoRem(x, y, s, false, nil, nil)
-		zzz = rounder.Round(new(Dec), zz, nil, nil)
+		zz, _, _ := new(Dec).quoRem(x, y, scl, false, nil, nil)
+		zzz = r.Round(new(Dec), zz, nil, nil)
 	}
 	if zzz == nil {
 		return nil
@@ -254,12 +257,14 @@ func (z *Dec) Quo(x, y *Dec, scaler Scaler, rounder Rounder) *Dec {
 	return z.move(zzz)
 }
 
-// QuoExact(x, y) is a shorthand for Quo(x, y, ScaleQuoExact, RoundExact).
-// If x/y can be expressed as a Dec without rounding, QuoExact sets z to the
-// quotient x/y and returns z. Otherwise, it returns nil and the value of z is
-// undefined.
+// QuoExact sets z to the quotient x/y and returns z when x/y is a finite
+// decimal. Otherwise it returns nil and the value of z is undefined.
+//
+// The scale of a non-nil result is "x.Scale() - y.Scale()" or greater; it is
+// calculated so that the remainder will be zero whenever x/y is a finite
+// decimal.
 func (z *Dec) QuoExact(x, y *Dec) *Dec {
-	return z.Quo(x, y, ScaleQuoExact, RoundExact)
+	return z.quo(x, y, scaleQuoExact{}, RoundExact)
 }
 
 // quoRem sets z to the quotient x/y with the scale s, and if useRem is true,
@@ -312,10 +317,11 @@ func (z *Dec) quoRem(x, y *Dec, s Scale, useRem bool,
 	return z, remNum, remDen
 }
 
-// ScaleQuoExact is the Scaler used by QuoExact. It returns a scale that is
-// greater than or equal to "x.Scale() - y.Scale()"; it is calculated so that
-// the remainder will be zero whenever x/y is a finite decimal.
-var ScaleQuoExact Scaler = scaleQuoExact{}
+type sclr struct{ s Scale }
+
+func (s sclr) Scale(x, y *Dec) Scale {
+	return s.s
+}
 
 type scaleQuoExact struct{}
 

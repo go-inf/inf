@@ -27,20 +27,20 @@ func ExampleDec_Scan() {
 	// Output: 184467440.73709551617
 }
 
-func ExampleDec_Quo_scale2RoundDown() {
+func ExampleDec_QuoRound_scale2RoundDown() {
 	// 10 / 3 is an infinite decimal; it has no exact Dec representation
 	x, y := inf.NewDecInt64(10), inf.NewDecInt64(3)
 	// use 2 digits beyond the decimal point, round towards 0
-	z := new(inf.Dec).Quo(x, y, inf.Scale(2), inf.RoundDown)
+	z := new(inf.Dec).QuoRound(x, y, 2, inf.RoundDown)
 	fmt.Println(z)
 	// Output: 3.33
 }
 
-func ExampleDec_Quo_scale2RoundCeil() {
+func ExampleDec_QuoRound_scale2RoundCeil() {
 	// -42 / 400 is an finite decimal with 3 digits beyond the decimal point
 	x, y := inf.NewDecInt64(-42), inf.NewDecInt64(400)
 	// use 2 digits beyond decimal point, round towards positive infinity
-	z := new(inf.Dec).Quo(x, y, inf.Scale(2), inf.RoundCeil)
+	z := new(inf.Dec).QuoRound(x, y, 2, inf.RoundCeil)
 	fmt.Println(z)
 	// Output: -0.10
 }

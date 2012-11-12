@@ -121,7 +121,7 @@ var decQuoRemZZZ = []struct {
 func TestDecQuoRem(t *testing.T) {
 	for i, a := range decQuoRemZZZ {
 		z, rA, rB := new(Dec), new(big.Int), new(big.Int)
-		s := ScaleQuoExact.Scale(a.x, a.y)
+		s := scaleQuoExact{}.Scale(a.x, a.y)
 		z.quoRem(a.x, a.y, s, true, rA, rB)
 		if a.z.Cmp(z) != 0 || a.r.Cmp(new(big.Rat).SetFrac(rA, rB)) != 0 {
 			t.Errorf("#%d QuoRemZZZ got %v, %v, %v; expected %v, %v", i, z, rA, rB, a.z, a.r)

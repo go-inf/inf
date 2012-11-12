@@ -140,15 +140,15 @@ func Benchmark_Dec_Mul_QuoExact(b *testing.B) {
 	})
 }
 
-func Benchmark_Dec_Quo_Fixed_Down(b *testing.B) {
+func Benchmark_Dec_QuoRound_Fixed_Down(b *testing.B) {
 	doBenchmarkDec2(b, func(x, y *Dec) {
-		_ = new(Dec).Quo(x, y, Scale(0), RoundDown)
+		_ = new(Dec).QuoRound(x, y, 0, RoundDown)
 	})
 }
 
-func Benchmark_Dec_Quo_Fixed_HalfUp(b *testing.B) {
+func Benchmark_Dec_QuoRound_Fixed_HalfUp(b *testing.B) {
 	doBenchmarkDec2(b, func(x, y *Dec) {
-		_ = new(Dec).Quo(x, y, Scale(0), RoundHalfUp)
+		_ = new(Dec).QuoRound(x, y, 0, RoundHalfUp)
 	})
 }
 

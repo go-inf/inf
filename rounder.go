@@ -8,7 +8,9 @@ import (
 // result of a division to a finite Dec. It is used by Dec.Round() and
 // Dec.Quo().
 //
-type Rounder interface {
+type Rounder rounder
+
+type rounder interface {
 
 	// When UseRemainder() returns true, the Round() method is passed the
 	// remainder of the division, expressed as the numerator and denominator of
@@ -29,16 +31,16 @@ type Rounder interface {
 	Round(z, quo *Dec, remNum, remDen *big.Int) *Dec
 }
 
-type rounder struct {
+type rndr struct {
 	useRem bool
 	round  func(z, quo *Dec, remNum, remDen *big.Int) *Dec
 }
 
-func (r rounder) UseRemainder() bool {
+func (r rndr) UseRemainder() bool {
 	return r.useRem
 }
 
-func (r rounder) Round(z, quo *Dec, remNum, remDen *big.Int) *Dec {
+func (r rndr) Round(z, quo *Dec, remNum, remDen *big.Int) *Dec {
 	return r.round(z, quo, remNum, remDen)
 }
 
@@ -53,7 +55,7 @@ var RoundExact Rounder = roundExact
 // absolute value not exceeding that of the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundDown).
+// Quo(x, y, scale, RoundDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -80,7 +82,7 @@ var RoundDown Rounder = roundDown
 // rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundUp).
+// Quo(x, y, scale, RoundUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -106,7 +108,7 @@ var RoundUp Rounder = roundUp
 // rounds to the Dec with the lower absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundHalfDown).
+// Quo(x, y, scale, RoundHalfDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -132,7 +134,7 @@ var RoundHalfDown Rounder = roundHalfDown
 // rounds to the Dec with the greater absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundHalfUp).
+// Quo(x, y, scale, RoundHalfUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -158,7 +160,7 @@ var RoundHalfUp Rounder = roundHalfUp
 // rounds to the Dec with even last digit.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundHalfEven).
+// Quo(x, y, scale, RoundHalfEven).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -184,7 +186,7 @@ var RoundHalfEven Rounder = roundHalfEven
 // Dec not exceeding the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundFloor).
+// Quo(x, y, scale, RoundFloor).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -210,7 +212,7 @@ var RoundFloor Rounder = roundFloor
 // smallest Dec not smaller than the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, Scale(scale), RoundCeil).
+// Quo(x, y, scale, RoundCeil).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -234,7 +236,7 @@ var RoundCeil Rounder = roundCeil
 
 var intSign = []*big.Int{big.NewInt(-1), big.NewInt(0), big.NewInt(1)}
 
-var roundExact = rounder{true,
+var roundExact = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
 		if rA.Sign() != 0 {
 			return nil
@@ -242,12 +244,12 @@ var roundExact = rounder{true,
 		return z.move(q)
 	}}
 
-var roundDown = rounder{false,
+var roundDown = rndr{false,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
 		return z.move(q)
 	}}
 
-var roundUp = rounder{true,
+var roundUp = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
 		z.move(q)
 		if rA.Sign() != 0 {
@@ -284,22 +286,22 @@ func roundHalf(f func(c int, odd uint) (roundUp bool)) func(z, q *Dec, rA, rB *b
 	}
 }
 
-var roundHalfDown = rounder{true, roundHalf(
+var roundHalfDown = rndr{true, roundHalf(
 	func(c int, odd uint) bool {
 		return c > 0
 	})}
 
-var roundHalfUp = rounder{true, roundHalf(
+var roundHalfUp = rndr{true, roundHalf(
 	func(c int, odd uint) bool {
 		return c >= 0
 	})}
 
-var roundHalfEven = rounder{true, roundHalf(
+var roundHalfEven = rndr{true, roundHalf(
 	func(c int, odd uint) bool {
 		return c > 0 || c == 0 && odd == 1
 	})}
 
-var roundFloor = rounder{true,
+var roundFloor = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
 		z.move(q)
 		if rA.Sign()*rB.Sign() < 0 {
@@ -308,7 +310,7 @@ var roundFloor = rounder{true,
 		return z
 	}}
 
-var roundCeil = rounder{true,
+var roundCeil = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
 		z.move(q)
 		if rA.Sign()*rB.Sign() > 0 {

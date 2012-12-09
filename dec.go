@@ -15,6 +15,7 @@
 //  - conversions to and from float32/64 types
 //
 // Features considered for possible addition:
+//  + simplify API for New*()
 //  + formatting options
 //  + Exp method
 //  + combined operations such as AddRound/MulAdd etc
@@ -35,8 +36,8 @@ import (
 // The sign and the coefficient value are handled together as a signed value
 // and referred to as the unscaled value.
 // (Positive and negative zero values are not distinguished.)
-// Since the exponent is most commonly negative, it is handled in negated form
-// and referred to as scale.
+// Since the exponent is most commonly non-positive, it is handled in negated
+// form and referred to as scale.
 //
 // The mathematical value of a Dec equals:
 //
@@ -55,6 +56,10 @@ import (
 //         1     -1   "10"
 //
 // The zero value for a Dec represents the value 0 with scale 0.
+//
+// Operations are typically performed through the *Dec type.
+// The semantics of the assignment operation "=" for "bare" Dec values is
+// undefined and should not be relied on.
 //
 // Methods are typically of the form:
 //

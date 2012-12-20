@@ -23,6 +23,9 @@
 //
 package inf
 
+// TODO:
+//  - avoid excessive deep copying (quo and rounders)
+
 import (
 	"fmt"
 	"io"
@@ -155,17 +158,6 @@ func (z *Dec) Set(x *Dec) *Dec {
 	return z
 }
 
-// Move sets z to the value of x, and sets x to zero, unless z == x.
-// It is intended for fast assignment from temporary variables without copying
-// the underlying array.
-func (z *Dec) move(x *Dec) *Dec {
-	if z != x {
-		*z = *x
-		*x = Dec{}
-	}
-	return z
-}
-
 // Sign returns:
 //
 //	-1 if x <  0
@@ -259,7 +251,7 @@ func (z *Dec) quo(x, y *Dec, s scaler, r Rounder) *Dec {
 	if zzz == nil {
 		return nil
 	}
-	return z.move(zzz)
+	return z.Set(zzz)
 }
 
 // QuoExact sets z to the quotient x/y and returns z when x/y is a finite

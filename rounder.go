@@ -241,17 +241,17 @@ var roundExact = rndr{true,
 		if rA.Sign() != 0 {
 			return nil
 		}
-		return z.move(q)
+		return z.Set(q)
 	}}
 
 var roundDown = rndr{false,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		return z.move(q)
+		return z.Set(q)
 	}}
 
 var roundUp = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
+		z.Set(q)
 		if rA.Sign() != 0 {
 			z.Unscaled().Add(z.Unscaled(), intSign[rA.Sign()*rB.Sign()+1])
 		}
@@ -260,7 +260,7 @@ var roundUp = rndr{true,
 
 func roundHalf(f func(c int, odd uint) (roundUp bool)) func(z, q *Dec, rA, rB *big.Int) *Dec {
 	return func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
+		z.Set(q)
 		brA, brB := rA.BitLen(), rB.BitLen()
 		if brA < brB-1 {
 			// brA < brB-1 => |rA| < |rB/2|
@@ -303,7 +303,7 @@ var roundHalfEven = rndr{true, roundHalf(
 
 var roundFloor = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
+		z.Set(q)
 		if rA.Sign()*rB.Sign() < 0 {
 			z.Unscaled().Add(z.Unscaled(), intSign[0])
 		}
@@ -312,7 +312,7 @@ var roundFloor = rndr{true,
 
 var roundCeil = rndr{true,
 	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.move(q)
+		z.Set(q)
 		if rA.Sign()*rB.Sign() > 0 {
 			z.Unscaled().Add(z.Unscaled(), intSign[2])
 		}

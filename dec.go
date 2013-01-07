@@ -15,7 +15,7 @@
 //  - conversions to and from float32/64 types
 //
 // Features considered for possible addition:
-//  + simplify API for New*()
+//  + revise/add Unscaled(Big) to match SetUnscaled(Big) and NewDec(Big)
 //  + formatting options
 //  + Exp method
 //  + combined operations such as AddRound/MulAdd etc
@@ -25,6 +25,7 @@ package inf
 
 // TODO:
 //  - avoid excessive deep copying (quo and rounders)
+//  - use Round (not Quo) in rounding examples
 
 import (
 	"fmt"
@@ -114,14 +115,14 @@ var exp10cache [64]big.Int = func() [64]big.Int {
 
 // NewDec allocates and returns a new Dec set to the given unscaled value and
 // scale.
-func NewDec(unscaled *big.Int, scale Scale) *Dec {
+func NewDec(unscaled int64, scale Scale) *Dec {
 	return new(Dec).SetUnscaled(unscaled).SetScale(scale)
 }
 
 // NewDecInt64 allocates and returns a new Dec set to the given int64 value with
 // scale 0.
-func NewDecInt64(x int64) *Dec {
-	return new(Dec).SetUnscaled(big.NewInt(x))
+func NewDecBig(unscaled *big.Int, scale Scale) *Dec {
+	return new(Dec).SetUnscaledBig(unscaled).SetScale(scale)
 }
 
 // Scale returns the scale of x.
@@ -134,25 +135,34 @@ func (x *Dec) Unscaled() *big.Int {
 	return &x.unscaled
 }
 
-// SetScale sets the scale of x, with the unscaled value unchanged.
+// SetScale sets the scale of z, with the unscaled value unchanged, and returns
+// z.
 // The mathematical value of the Dec changes as if it was multiplied by
 // 10**(oldscale-scale).
-func (x *Dec) SetScale(scale Scale) *Dec {
-	x.scale = scale
-	return x
+func (z *Dec) SetScale(scale Scale) *Dec {
+	z.scale = scale
+	return z
 }
 
-// SetScale sets the unscaled value of x, with the scale unchanged.
-func (x *Dec) SetUnscaled(unscaled *big.Int) *Dec {
-	x.unscaled.Set(unscaled)
-	return x
+// SetUnscaled sets the unscaled value of z, with the scale unchanged, and
+// returns z.
+func (z *Dec) SetUnscaled(unscaled int64) *Dec {
+	z.unscaled.SetInt64(unscaled)
+	return z
+}
+
+// SetUnscaledBig sets the unscaled value of z, with the scale unchanged, and
+// returns z.
+func (z *Dec) SetUnscaledBig(unscaled *big.Int) *Dec {
+	z.unscaled.Set(unscaled)
+	return z
 }
 
 // Set sets z to the value of x and returns z.
 // It does nothing if z == x.
 func (z *Dec) Set(x *Dec) *Dec {
 	if z != x {
-		z.SetUnscaled(x.Unscaled())
+		z.SetUnscaledBig(x.Unscaled())
 		z.SetScale(x.Scale())
 	}
 	return z
@@ -222,7 +232,7 @@ func (z *Dec) Mul(x, y *Dec) *Dec {
 // Round sets z to the value of x rounded to Scale s using Rounder r, and
 // returns z.
 func (z *Dec) Round(x *Dec, s Scale, r Rounder) *Dec {
-	return z.QuoRound(x, NewDecInt64(1), s, r)
+	return z.QuoRound(x, NewDec(1, 0), s, r)
 }
 
 // QuoRound sets z to the quotient x/y, rounded using the given Rounder to the
@@ -381,10 +391,10 @@ func (x *Dec) rescale(newScale Scale) *Dec {
 	switch {
 	case shift < 0:
 		e := exp10(-shift)
-		return NewDec(new(big.Int).Quo(x.Unscaled(), e), newScale)
+		return NewDecBig(new(big.Int).Quo(x.Unscaled(), e), newScale)
 	case shift > 0:
 		e := exp10(shift)
-		return NewDec(new(big.Int).Mul(x.Unscaled(), e), newScale)
+		return NewDecBig(new(big.Int).Mul(x.Unscaled(), e), newScale)
 	}
 	return x
 }

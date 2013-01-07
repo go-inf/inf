@@ -23,9 +23,9 @@ var initBench = func() {
 	max := new(big.Int).Lsh(big.NewInt(1), bits)
 	r := rand.New(rand.NewSource(0))
 	for i := 0; i < cap(decInput); i++ {
-		decInput[i][0].SetUnscaled(new(big.Int).Rand(r, max)).
+		decInput[i][0].SetUnscaledBig(new(big.Int).Rand(r, max)).
 			SetScale(Scale(r.Int31n(int32(2*maxscale-1)) - int32(maxscale)))
-		decInput[i][1].SetUnscaled(new(big.Int).Rand(r, max)).
+		decInput[i][1].SetUnscaledBig(new(big.Int).Rand(r, max)).
 			SetScale(Scale(r.Int31n(int32(2*maxscale-1)) - int32(maxscale)))
 	}
 	for i := 0; i < cap(intInput); i++ {

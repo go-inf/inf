@@ -29,7 +29,7 @@ func ExampleDec_Scan() {
 
 func ExampleDec_QuoRound_scale2RoundDown() {
 	// 10 / 3 is an infinite decimal; it has no exact Dec representation
-	x, y := inf.NewDecInt64(10), inf.NewDecInt64(3)
+	x, y := inf.NewDec(10, 0), inf.NewDec(3, 0)
 	// use 2 digits beyond the decimal point, round towards 0
 	z := new(inf.Dec).QuoRound(x, y, 2, inf.RoundDown)
 	fmt.Println(z)
@@ -38,7 +38,7 @@ func ExampleDec_QuoRound_scale2RoundDown() {
 
 func ExampleDec_QuoRound_scale2RoundCeil() {
 	// -42 / 400 is an finite decimal with 3 digits beyond the decimal point
-	x, y := inf.NewDecInt64(-42), inf.NewDecInt64(400)
+	x, y := inf.NewDec(-42, 0), inf.NewDec(400, 0)
 	// use 2 digits beyond decimal point, round towards positive infinity
 	z := new(inf.Dec).QuoRound(x, y, 2, inf.RoundCeil)
 	fmt.Println(z)
@@ -47,7 +47,7 @@ func ExampleDec_QuoRound_scale2RoundCeil() {
 
 func ExampleDec_QuoExact_ok() {
 	// 1 / 25 is a finite decimal; it has exact Dec representation
-	x, y := inf.NewDecInt64(1), inf.NewDecInt64(25)
+	x, y := inf.NewDec(1, 0), inf.NewDec(25, 0)
 	z := new(inf.Dec).QuoExact(x, y)
 	fmt.Println(z)
 	// Output: 0.04
@@ -55,7 +55,7 @@ func ExampleDec_QuoExact_ok() {
 
 func ExampleDec_QuoExact_fail() {
 	// 1 / 3 is an infinite decimal; it has no exact Dec representation
-	x, y := inf.NewDecInt64(1), inf.NewDecInt64(3)
+	x, y := inf.NewDec(1, 0), inf.NewDec(3, 0)
 	z := new(inf.Dec).QuoExact(x, y)
 	fmt.Println(z)
 	// Output: <nil>

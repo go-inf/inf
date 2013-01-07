@@ -15,23 +15,23 @@ type decArgZZ struct {
 }
 
 var decSumZZ = []decArgZZ{
-	{NewDecInt64(0), NewDecInt64(0), NewDecInt64(0)},
-	{NewDecInt64(1), NewDecInt64(1), NewDecInt64(0)},
-	{NewDecInt64(1111111110), NewDecInt64(123456789), NewDecInt64(987654321)},
-	{NewDecInt64(-1), NewDecInt64(-1), NewDecInt64(0)},
-	{NewDecInt64(864197532), NewDecInt64(-123456789), NewDecInt64(987654321)},
-	{NewDecInt64(-1111111110), NewDecInt64(-123456789), NewDecInt64(-987654321)},
-	{NewDec(big.NewInt(12), 2), NewDec(big.NewInt(1), 1), NewDec(big.NewInt(2), 2)},
+	{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
+	{NewDec(1, 0), NewDec(1, 0), NewDec(0, 0)},
+	{NewDec(1111111110, 0), NewDec(123456789, 0), NewDec(987654321, 0)},
+	{NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0)},
+	{NewDec(864197532, 0), NewDec(-123456789, 0), NewDec(987654321, 0)},
+	{NewDec(-1111111110, 0), NewDec(-123456789, 0), NewDec(-987654321, 0)},
+	{NewDec(12, 2), NewDec(1, 1), NewDec(2, 2)},
 }
 
 var decProdZZ = []decArgZZ{
-	{NewDecInt64(0), NewDecInt64(0), NewDecInt64(0)},
-	{NewDecInt64(0), NewDecInt64(1), NewDecInt64(0)},
-	{NewDecInt64(1), NewDecInt64(1), NewDecInt64(1)},
-	{NewDecInt64(-991 * 991), NewDecInt64(991), NewDecInt64(-991)},
-	{NewDec(big.NewInt(2), 3), NewDec(big.NewInt(1), 1), NewDec(big.NewInt(2), 2)},
-	{NewDec(big.NewInt(2), -3), NewDec(big.NewInt(1), -1), NewDec(big.NewInt(2), -2)},
-	{NewDec(big.NewInt(2), 3), NewDec(big.NewInt(1), 1), NewDec(big.NewInt(2), 2)},
+	{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
+	{NewDec(0, 0), NewDec(1, 0), NewDec(0, 0)},
+	{NewDec(1, 0), NewDec(1, 0), NewDec(1, 0)},
+	{NewDec(-991*991, 0), NewDec(991, 0), NewDec(-991, 0)},
+	{NewDec(2, 3), NewDec(1, 1), NewDec(2, 2)},
+	{NewDec(2, -3), NewDec(1, -1), NewDec(2, -2)},
+	{NewDec(2, 3), NewDec(1, 1), NewDec(2, 2)},
 }
 
 func TestDecSignZ(t *testing.T) {
@@ -104,18 +104,18 @@ var decQuoRemZZZ = []struct {
 	srA, srB int
 }{
 	// basic examples
-	{NewDec(big.NewInt(1), 0), NewDecInt64(2), NewDecInt64(2), big.NewRat(0, 1), 0, 1},
-	{NewDec(big.NewInt(15), 1), NewDecInt64(3), NewDecInt64(2), big.NewRat(0, 1), 0, 1},
-	{NewDec(big.NewInt(1), 1), NewDecInt64(1), NewDecInt64(10), big.NewRat(0, 1), 0, 1},
-	{NewDec(big.NewInt(0), 0), NewDecInt64(2), NewDecInt64(3), big.NewRat(2, 3), 1, 1},
-	{NewDec(big.NewInt(0), 0), NewDecInt64(2), NewDecInt64(6), big.NewRat(1, 3), 1, 1},
-	{NewDec(big.NewInt(1), 1), NewDecInt64(2), NewDecInt64(12), big.NewRat(2, 3), 1, 1},
+	{NewDec(1, 0), NewDec(2, 0), NewDec(2, 0), big.NewRat(0, 1), 0, 1},
+	{NewDec(15, 1), NewDec(3, 0), NewDec(2, 0), big.NewRat(0, 1), 0, 1},
+	{NewDec(1, 1), NewDec(1, 0), NewDec(10, 0), big.NewRat(0, 1), 0, 1},
+	{NewDec(0, 0), NewDec(2, 0), NewDec(3, 0), big.NewRat(2, 3), 1, 1},
+	{NewDec(0, 0), NewDec(2, 0), NewDec(6, 0), big.NewRat(1, 3), 1, 1},
+	{NewDec(1, 1), NewDec(2, 0), NewDec(12, 0), big.NewRat(2, 3), 1, 1},
 
 	// examples from the Go Language Specification
-	{NewDec(big.NewInt(1), 0), NewDecInt64(5), NewDecInt64(3), big.NewRat(2, 3), 1, 1},
-	{NewDec(big.NewInt(-1), 0), NewDecInt64(-5), NewDecInt64(3), big.NewRat(-2, 3), -1, 1},
-	{NewDec(big.NewInt(-1), 0), NewDecInt64(5), NewDecInt64(-3), big.NewRat(-2, 3), 1, -1},
-	{NewDec(big.NewInt(1), 0), NewDecInt64(-5), NewDecInt64(-3), big.NewRat(2, 3), -1, -1},
+	{NewDec(1, 0), NewDec(5, 0), NewDec(3, 0), big.NewRat(2, 3), 1, 1},
+	{NewDec(-1, 0), NewDec(-5, 0), NewDec(3, 0), big.NewRat(-2, 3), -1, 1},
+	{NewDec(-1, 0), NewDec(5, 0), NewDec(-3, 0), big.NewRat(-2, 3), 1, -1},
+	{NewDec(1, 0), NewDec(-5, 0), NewDec(-3, 0), big.NewRat(2, 3), -1, -1},
 }
 
 func TestDecQuoRem(t *testing.T) {
@@ -138,16 +138,16 @@ var decRoundTests = [...]struct {
 	r   Rounder
 	exp *Dec
 }{
-	{NewDec(big.NewInt(123424999999999993), 15), 2, RoundHalfUp, NewDec(big.NewInt(12342), 2)},
-	{NewDec(big.NewInt(123425000000000001), 15), 2, RoundHalfUp, NewDec(big.NewInt(12343), 2)},
-	{NewDec(big.NewInt(123424999999999993), 15), 15, RoundHalfUp, NewDec(big.NewInt(123424999999999993), 15)},
-	{NewDec(big.NewInt(123424999999999993), 15), 16, RoundHalfUp, NewDec(big.NewInt(1234249999999999930), 16)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -1, RoundHalfUp, NewDec(big.NewInt(1844674407370955162), -1)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -2, RoundHalfUp, NewDec(big.NewInt(184467440737095516), -2)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -3, RoundHalfUp, NewDec(big.NewInt(18446744073709552), -3)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -4, RoundHalfUp, NewDec(big.NewInt(1844674407370955), -4)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -5, RoundHalfUp, NewDec(big.NewInt(184467440737096), -5)},
-	{NewDec(new(big.Int).Lsh(big.NewInt(1), 64), 0), -6, RoundHalfUp, NewDec(big.NewInt(18446744073710), -6)},
+	{NewDec(123424999999999993, 15), 2, RoundHalfUp, NewDec(12342, 2)},
+	{NewDec(123425000000000001, 15), 2, RoundHalfUp, NewDec(12343, 2)},
+	{NewDec(123424999999999993, 15), 15, RoundHalfUp, NewDec(123424999999999993, 15)},
+	{NewDec(123424999999999993, 15), 16, RoundHalfUp, NewDec(1234249999999999930, 16)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -1, RoundHalfUp, NewDec(1844674407370955162, -1)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -2, RoundHalfUp, NewDec(184467440737095516, -2)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -3, RoundHalfUp, NewDec(18446744073709552, -3)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -4, RoundHalfUp, NewDec(1844674407370955, -4)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -5, RoundHalfUp, NewDec(184467440737096, -5)},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -6, RoundHalfUp, NewDec(18446744073710, -6)},
 }
 
 func TestDecRound(t *testing.T) {
@@ -221,7 +221,7 @@ func TestDecGetString(t *testing.T) {
 		if !test.ok {
 			continue
 		}
-		z.SetUnscaled(big.NewInt(test.val))
+		z.SetUnscaled(test.val)
 		z.SetScale(test.scale)
 
 		s := z.String()
@@ -245,10 +245,10 @@ func TestDecSetString(t *testing.T) {
 		}
 		// initialize to a non-zero value so that issues with parsing
 		// 0 are detected
-		tmp.Set(NewDecInt64(1234567890).SetScale(123))
+		tmp.Set(NewDec(1234567890, 123))
 		n1, ok1 := new(Dec).SetString(test.in)
 		n2, ok2 := tmp.SetString(test.in)
-		expected := NewDecInt64(test.val).SetScale(test.scale)
+		expected := NewDec(test.val, test.scale)
 		if ok1 != test.ok || ok2 != test.ok {
 			t.Errorf("#%d (input '%s') ok incorrect (should be %t)", i, test.in, test.ok)
 			continue
@@ -284,7 +284,7 @@ func TestDecScan(t *testing.T) {
 		}
 		// initialize to a non-zero value so that issues with parsing
 		// 0 are detected
-		tmp.Set(NewDecInt64(1234567890).SetScale(123))
+		tmp.Set(NewDec(1234567890, 123))
 		n1, n2 := new(Dec), tmp
 		nn1, err1 := fmt.Sscan(test.in, n1)
 		nn2, err2 := fmt.Sscan(test.in, n2)
@@ -294,7 +294,7 @@ func TestDecScan(t *testing.T) {
 			}
 			continue
 		}
-		expected := NewDecInt64(test.val).SetScale(test.scale)
+		expected := NewDec(test.val, test.scale)
 		if nn1 != 1 || err1 != nil || nn2 != 1 || err2 != nil {
 			t.Errorf("#%d (input '%s') error %d %v, %d %v", i, test.in, nn1, err1, nn2, err2)
 			continue

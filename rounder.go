@@ -55,7 +55,7 @@ var RoundExact Rounder = roundExact
 // absolute value not exceeding that of the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundDown).
+// QuoRound(x, y, scale, RoundDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -82,7 +82,7 @@ var RoundDown Rounder = roundDown
 // rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundUp).
+// QuoRound(x, y, scale, RoundUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -108,7 +108,7 @@ var RoundUp Rounder = roundUp
 // rounds to the Dec with the lower absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundHalfDown).
+// QuoRound(x, y, scale, RoundHalfDown).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -134,7 +134,7 @@ var RoundHalfDown Rounder = roundHalfDown
 // rounds to the Dec with the greater absolute value.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundHalfUp).
+// QuoRound(x, y, scale, RoundHalfUp).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -160,7 +160,7 @@ var RoundHalfUp Rounder = roundHalfUp
 // rounds to the Dec with even last digit.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundHalfEven).
+// QuoRound(x, y, scale, RoundHalfEven).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -186,7 +186,7 @@ var RoundHalfEven Rounder = roundHalfEven
 // Dec not exceeding the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundFloor).
+// QuoRound(x, y, scale, RoundFloor).
 //
 //      x      y    scale   result
 //  ------------------------------
@@ -212,7 +212,7 @@ var RoundFloor Rounder = roundFloor
 // smallest Dec not smaller than the result represented by quo and rem.
 //
 // The following table shows examples of the results for
-// Quo(x, y, scale, RoundCeil).
+// QuoRound(x, y, scale, RoundCeil).
 //
 //      x      y    scale   result
 //  ------------------------------

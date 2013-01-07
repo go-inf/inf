@@ -24,16 +24,16 @@
 //
 // Compared to http://code.google.com/p/godec , the following APIs have changed:
 //
-//  godec              inf.Dec                 rationale
+//  godec             inf.Dec              rationale
 //  ---------------------------------------------------------------------------
-//  NewDecInt64(u)     NewDec(u, 0)            favor common case for short API
-//  NewDec(u, s)       NewDecBig(b, i)         favor common case for short API
-//  z.SetUnscaled(u)   z.SetUnscaledBig(u)     favor common case for short API
-//  (n/a)              z.SetUnscaled(u)        favor common case for short API
-//  x.Unscaled()       x.UnscaledBig()         favor common case for short API
-//  (n/a)              x.Unscaled()            favor common case for short API
-//  z.Quo(x, y, s, r)  z.QuoRound(x, y, s, r)  consistency (combined operation)
-//  type Scaler        (unexported)            hide implementation details
+//  NewDecInt64(u)    NewDec(u,0)          favor common case for short API
+//  NewDec(u,s)       NewDecBig(b,i)       favor common case for short API
+//  z.SetUnscaled(u)  z.SetUnscaledBig(u)  favor common case for short API
+//  (n/a)             z.SetUnscaled(u)     favor common case for short API
+//  x.Unscaled()      x.UnscaledBig()      consistency (NewDec*/SetUnscaled*)
+//  (n/a)             x.Unscaled()         consistency (NewDec*/SetUnscaled*)
+//  z.Quo(x,y,s,r)    z.QuoRound(x,y,s,r)  consistency (combined operation)
+//  type Scaler       (unexported)         hide implementation details
 //
 package inf
 

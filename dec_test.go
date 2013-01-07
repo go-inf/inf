@@ -132,6 +132,30 @@ func TestDecQuoRem(t *testing.T) {
 	}
 }
 
+var decUnscaledTests = []struct {
+	d  *Dec
+	u  int64 // ignored when ok == false
+	ok bool
+}{
+	{new(Dec), 0, true},
+	{NewDec(-1<<63, 0), -1 << 63, true},
+	{NewDec(-(-1<<63 + 1), 0), -(-1<<63 + 1), true},
+	{new(Dec).Neg(NewDec(-1<<63, 0)), 0, false},
+	{new(Dec).Sub(NewDec(-1<<63, 0), NewDec(1, 0)), 0, false},
+	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), 0, false},
+}
+
+func TestDecUnscaled(t *testing.T) {
+	for i, tt := range decUnscaledTests {
+		u, ok := tt.d.Unscaled()
+		if ok != tt.ok {
+			t.Errorf("#%d Unscaled: got %v, expected %v", i, ok, tt.ok)
+		} else if ok && u != tt.u {
+			t.Errorf("#%d Unscaled: got %v, expected %v", i, u, tt.u)
+		}
+	}
+}
+
 var decRoundTests = [...]struct {
 	in  *Dec
 	s   Scale

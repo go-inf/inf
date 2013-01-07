@@ -15,11 +15,25 @@
 //  - conversions to and from float32/64 types
 //
 // Features considered for possible addition:
-//  + revise/add Unscaled(Big) to match SetUnscaled(Big) and NewDec(Big)
 //  + formatting options
 //  + Exp method
 //  + combined operations such as AddRound/MulAdd etc
 //  + exchanging data in decimal32/64/128 formats
+//
+// API Changes
+//
+// Compared to http://code.google.com/p/godec , the following APIs have changed:
+//
+//  godec              inf.Dec                 rationale
+//  ---------------------------------------------------------------------------
+//  NewDecInt64(u)     NewDec(u, 0)            favor common case for short API
+//  NewDec(u, s)       NewDecBig(b, i)         favor common case for short API
+//  z.SetUnscaled(u)   z.SetUnscaledBig(u)     favor common case for short API
+//  (n/a)              z.SetUnscaled(u)        favor common case for short API
+//  x.Unscaled()       x.UnscaledBig()         favor common case for short API
+//  (n/a)              x.Unscaled()            favor common case for short API
+//  z.Quo(x, y, s, r)  z.QuoRound(x, y, s, r)  consistency (combined operation)
+//  type Scaler        (unexported)            hide implementation details
 //
 package inf
 
@@ -113,14 +127,14 @@ var exp10cache [64]big.Int = func() [64]big.Int {
 	return e10
 }()
 
-// NewDec allocates and returns a new Dec set to the given unscaled value and
-// scale.
+// NewDec allocates and returns a new Dec set to the given int64 unscaled value
+// and scale.
 func NewDec(unscaled int64, scale Scale) *Dec {
 	return new(Dec).SetUnscaled(unscaled).SetScale(scale)
 }
 
-// NewDecInt64 allocates and returns a new Dec set to the given int64 value with
-// scale 0.
+// NewDecBig allocates and returns a new Dec set to the given *big.Int unscaled
+// value and scale.
 func NewDecBig(unscaled *big.Int, scale Scale) *Dec {
 	return new(Dec).SetUnscaledBig(unscaled).SetScale(scale)
 }
@@ -130,8 +144,19 @@ func (x *Dec) Scale() Scale {
 	return x.scale
 }
 
-// Unscaled returns the unscaled value of x.
-func (x *Dec) Unscaled() *big.Int {
+// Unscaled returns the unscaled value of x for u and true for ok when the
+// unscaled value can be represented as int64; otherwise it returns an undefined
+// int64 value for u and false for ok. Use x.UnscaledBig().Int64() to avoid
+// checking the validity of the value when the check is known to be redundant.
+func (x *Dec) Unscaled() (u int64, ok bool) {
+	u = x.unscaled.Int64()
+	var i big.Int
+	ok = i.SetInt64(u).Cmp(&x.unscaled) == 0
+	return
+}
+
+// UnscaledBig returns the unscaled value of x as *big.Int.
+func (x *Dec) UnscaledBig() *big.Int {
 	return &x.unscaled
 }
 
@@ -162,7 +187,7 @@ func (z *Dec) SetUnscaledBig(unscaled *big.Int) *Dec {
 // It does nothing if z == x.
 func (z *Dec) Set(x *Dec) *Dec {
 	if z != x {
-		z.SetUnscaledBig(x.Unscaled())
+		z.SetUnscaledBig(x.UnscaledBig())
 		z.SetScale(x.Scale())
 	}
 	return z
@@ -175,13 +200,13 @@ func (z *Dec) Set(x *Dec) *Dec {
 //	+1 if x >  0
 //
 func (x *Dec) Sign() int {
-	return x.Unscaled().Sign()
+	return x.UnscaledBig().Sign()
 }
 
 // Neg sets z to -x and returns z.
 func (z *Dec) Neg(x *Dec) *Dec {
 	z.SetScale(x.Scale())
-	z.Unscaled().Neg(x.Unscaled())
+	z.UnscaledBig().Neg(x.UnscaledBig())
 	return z
 }
 
@@ -193,13 +218,13 @@ func (z *Dec) Neg(x *Dec) *Dec {
 //
 func (x *Dec) Cmp(y *Dec) int {
 	xx, yy := upscale(x, y)
-	return xx.Unscaled().Cmp(yy.Unscaled())
+	return xx.UnscaledBig().Cmp(yy.UnscaledBig())
 }
 
 // Abs sets z to |x| (the absolute value of x) and returns z.
 func (z *Dec) Abs(x *Dec) *Dec {
 	z.SetScale(x.Scale())
-	z.Unscaled().Abs(x.Unscaled())
+	z.UnscaledBig().Abs(x.UnscaledBig())
 	return z
 }
 
@@ -208,7 +233,7 @@ func (z *Dec) Abs(x *Dec) *Dec {
 func (z *Dec) Add(x, y *Dec) *Dec {
 	xx, yy := upscale(x, y)
 	z.SetScale(xx.Scale())
-	z.Unscaled().Add(xx.Unscaled(), yy.Unscaled())
+	z.UnscaledBig().Add(xx.UnscaledBig(), yy.UnscaledBig())
 	return z
 }
 
@@ -217,7 +242,7 @@ func (z *Dec) Add(x, y *Dec) *Dec {
 func (z *Dec) Sub(x, y *Dec) *Dec {
 	xx, yy := upscale(x, y)
 	z.SetScale(xx.Scale())
-	z.Unscaled().Sub(xx.Unscaled(), yy.Unscaled())
+	z.UnscaledBig().Sub(xx.UnscaledBig(), yy.UnscaledBig())
 	return z
 }
 
@@ -225,7 +250,7 @@ func (z *Dec) Sub(x, y *Dec) *Dec {
 // The scale of z is the sum of the scales of x and y.
 func (z *Dec) Mul(x, y *Dec) *Dec {
 	z.SetScale(x.Scale() + y.Scale())
-	z.Unscaled().Mul(x.Unscaled(), y.Unscaled())
+	z.UnscaledBig().Mul(x.UnscaledBig(), y.UnscaledBig())
 	return z
 }
 
@@ -294,19 +319,19 @@ func (z *Dec) quoRem(x, y *Dec, s Scale, useRem bool,
 	switch {
 	case shift > 0:
 		// increased scale: decimal-shift dividend left
-		ix = new(big.Int).Mul(x.Unscaled(), exp10(shift))
-		iy = y.Unscaled()
+		ix = new(big.Int).Mul(x.UnscaledBig(), exp10(shift))
+		iy = y.UnscaledBig()
 	case shift < 0:
 		// decreased scale: decimal-shift divisor left
-		ix = x.Unscaled()
-		iy = new(big.Int).Mul(y.Unscaled(), exp10(-shift))
+		ix = x.UnscaledBig()
+		iy = new(big.Int).Mul(y.UnscaledBig(), exp10(-shift))
 	default:
-		ix = x.Unscaled()
-		iy = y.Unscaled()
+		ix = x.UnscaledBig()
+		iy = y.UnscaledBig()
 	}
 	// save a copy of iy in case it to be overwritten with the result
 	iy2 := iy
-	if iy == z.Unscaled() {
+	if iy == z.UnscaledBig() {
 		iy2 = new(big.Int).Set(iy)
 	}
 	// set scale
@@ -314,12 +339,12 @@ func (z *Dec) quoRem(x, y *Dec, s Scale, useRem bool,
 	// set unscaled
 	if useRem {
 		// Int division
-		_, intr := z.Unscaled().QuoRem(ix, iy, new(big.Int))
+		_, intr := z.UnscaledBig().QuoRem(ix, iy, new(big.Int))
 		// set remainder
 		remNum.Set(intr)
 		remDen.Set(iy2)
 	} else {
-		z.Unscaled().Quo(ix, iy)
+		z.UnscaledBig().Quo(ix, iy)
 	}
 	return z, remNum, remDen
 }
@@ -333,7 +358,7 @@ func (s sclr) Scale(x, y *Dec) Scale {
 type scaleQuoExact struct{}
 
 func (sqe scaleQuoExact) Scale(x, y *Dec) Scale {
-	rem := new(big.Rat).SetFrac(x.Unscaled(), y.Unscaled())
+	rem := new(big.Rat).SetFrac(x.UnscaledBig(), y.UnscaledBig())
 	f2, f5 := factor2(rem.Denom()), factor(rem.Denom(), bigInt[5])
 	var f10 Scale
 	if f2 > f5 {
@@ -391,10 +416,10 @@ func (x *Dec) rescale(newScale Scale) *Dec {
 	switch {
 	case shift < 0:
 		e := exp10(-shift)
-		return NewDecBig(new(big.Int).Quo(x.Unscaled(), e), newScale)
+		return NewDecBig(new(big.Int).Quo(x.UnscaledBig(), e), newScale)
 	case shift > 0:
 		e := exp10(shift)
-		return NewDecBig(new(big.Int).Mul(x.Unscaled(), e), newScale)
+		return NewDecBig(new(big.Int).Mul(x.UnscaledBig(), e), newScale)
 	}
 	return x
 }
@@ -419,7 +444,7 @@ func (x *Dec) String() string {
 		return "<nil>"
 	}
 	scale := x.Scale()
-	s := []byte(x.Unscaled().String())
+	s := []byte(x.UnscaledBig().String())
 	if scale <= 0 {
 		if scale != 0 && x.unscaled.Sign() != 0 {
 			s = appendZeros(s, -scale)
@@ -501,7 +526,7 @@ loop:
 	} else {
 		z.SetScale(0)
 	}
-	_, ok := z.Unscaled().SetString(string(unscaled), 10)
+	_, ok := z.UnscaledBig().SetString(string(unscaled), 10)
 	if !ok {
 		return nil, fmt.Errorf("invalid decimal: %s", string(unscaled))
 	}
@@ -565,7 +590,7 @@ func scale(b []byte) (s Scale) {
 
 // GobEncode implements the gob.GobEncoder interface.
 func (x *Dec) GobEncode() ([]byte, error) {
-	buf, err := x.Unscaled().GobEncode()
+	buf, err := x.UnscaledBig().GobEncode()
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +608,7 @@ func (z *Dec) GobDecode(buf []byte) error {
 		return fmt.Errorf("Dec.GobDecode: encoding version %d not supported", b)
 	}
 	l := len(buf) - scaleSize - 1
-	err := z.Unscaled().GobDecode(buf[:l])
+	err := z.UnscaledBig().GobDecode(buf[:l])
 	if err != nil {
 		return err
 	}

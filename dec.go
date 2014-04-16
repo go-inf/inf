@@ -615,3 +615,17 @@ func (z *Dec) GobDecode(buf []byte) error {
 	z.SetScale(scale(buf[l : l+scaleSize]))
 	return nil
 }
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (x *Dec) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (z *Dec) UnmarshalText(data []byte) error {
+	_, ok := z.SetString(string(data))
+	if !ok {
+		return fmt.Errorf("invalid inf.Dec")
+	}
+	return nil
+}

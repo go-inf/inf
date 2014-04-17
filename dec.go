@@ -39,7 +39,6 @@ package inf
 
 // TODO:
 //  - avoid excessive deep copying (quo and rounders)
-//  - use Round (not Quo) in rounding examples
 
 import (
 	"fmt"

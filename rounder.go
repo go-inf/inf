@@ -8,6 +8,8 @@ import (
 // result of a division to a finite Dec. It is used by Dec.Round() and
 // Dec.Quo().
 //
+// See the Example for results of using each Rounder with some sample values.
+//
 type Rounder rounder
 
 type rounder interface {
@@ -54,183 +56,36 @@ var RoundExact Rounder = roundExact
 // RoundDown rounds towards 0; that is, returns the Dec with the greatest
 // absolute value not exceeding that of the result represented by quo and rem.
 //
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundDown).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.1
-//    -1.5    10        1     -0.1
-//    -1.2    10        1     -0.1
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.0
-//    -0.5    10        1     -0.0
-//    -0.2    10        1     -0.0
-//     0.0    10        1      0.0
-//     0.2    10        1      0.0
-//     0.5    10        1      0.0
-//     0.8    10        1      0.0
-//     1.0    10        1      0.1
-//     1.2    10        1      0.1
-//     1.5    10        1      0.1
-//     1.8    10        1      0.1
-//
 var RoundDown Rounder = roundDown
 
 // RoundUp rounds away from 0; that is, returns the Dec with the smallest
 // absolute value not smaller than that of the result represented by quo and
 // rem.
 //
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundUp).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.2
-//    -1.5    10        1     -0.2
-//    -1.2    10        1     -0.2
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.1
-//    -0.5    10        1     -0.1
-//    -0.2    10        1     -0.1
-//     0.0    10        1      0.0
-//     0.2    10        1      0.1
-//     0.5    10        1      0.1
-//     0.8    10        1      0.1
-//     1.0    10        1      0.1
-//     1.2    10        1      0.2
-//     1.5    10        1      0.2
-//     1.8    10        1      0.2
-//
 var RoundUp Rounder = roundUp
 
 // RoundHalfDown rounds to the nearest Dec, and when the remainder is 1/2, it
 // rounds to the Dec with the lower absolute value.
-//
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundHalfDown).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.2
-//    -1.5    10        1     -0.1
-//    -1.2    10        1     -0.1
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.1
-//    -0.5    10        1     -0.0
-//    -0.2    10        1     -0.0
-//     0.0    10        1      0.0
-//     0.2    10        1      0.0
-//     0.5    10        1      0.0
-//     0.8    10        1      0.1
-//     1.0    10        1      0.1
-//     1.2    10        1      0.1
-//     1.5    10        1      0.1
-//     1.8    10        1      0.2
 //
 var RoundHalfDown Rounder = roundHalfDown
 
 // RoundHalfUp rounds to the nearest Dec, and when the remainder is 1/2, it
 // rounds to the Dec with the greater absolute value.
 //
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundHalfUp).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.2
-//    -1.5    10        1     -0.2
-//    -1.2    10        1     -0.1
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.1
-//    -0.5    10        1     -0.1
-//    -0.2    10        1     -0.0
-//     0.0    10        1      0.0
-//     0.2    10        1      0.0
-//     0.5    10        1      0.1
-//     0.8    10        1      0.1
-//     1.0    10        1      0.1
-//     1.2    10        1      0.1
-//     1.5    10        1      0.2
-//     1.8    10        1      0.2
-//
 var RoundHalfUp Rounder = roundHalfUp
 
 // RoundHalfEven rounds to the nearest Dec, and when the remainder is 1/2, it
 // rounds to the Dec with even last digit.
-//
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundHalfEven).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.2
-//    -1.5    10        1     -0.2
-//    -1.2    10        1     -0.1
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.1
-//    -0.5    10        1     -0.0
-//    -0.2    10        1     -0.0
-//     0.0    10        1      0.0
-//     0.2    10        1      0.0
-//     0.5    10        1      0.0
-//     0.8    10        1      0.1
-//     1.0    10        1      0.1
-//     1.2    10        1      0.1
-//     1.5    10        1      0.2
-//     1.8    10        1      0.2
 //
 var RoundHalfEven Rounder = roundHalfEven
 
 // RoundFloor rounds towards negative infinity; that is, returns the greatest
 // Dec not exceeding the result represented by quo and rem.
 //
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundFloor).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.2
-//    -1.5    10        1     -0.2
-//    -1.2    10        1     -0.2
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.1
-//    -0.5    10        1     -0.1
-//    -0.2    10        1     -0.1
-//     0.0    10        1      0.0
-//     0.2    10        1      0.0
-//     0.5    10        1      0.0
-//     0.8    10        1      0.0
-//     1.0    10        1      0.1
-//     1.2    10        1      0.1
-//     1.5    10        1      0.1
-//     1.8    10        1      0.1
-//
 var RoundFloor Rounder = roundFloor
 
 // RoundCeil rounds towards positive infinity; that is, returns the
 // smallest Dec not smaller than the result represented by quo and rem.
-//
-// The following table shows examples of the results for
-// QuoRound(x, y, scale, RoundCeil).
-//
-//      x      y    scale   result
-//  ------------------------------
-//    -1.8    10        1     -0.1
-//    -1.5    10        1     -0.1
-//    -1.2    10        1     -0.1
-//    -1.0    10        1     -0.1
-//    -0.8    10        1     -0.0
-//    -0.5    10        1     -0.0
-//    -0.2    10        1     -0.0
-//     0.0    10        1      0.0
-//     0.2    10        1      0.1
-//     0.5    10        1      0.1
-//     0.8    10        1      0.1
-//     1.0    10        1      0.1
-//     1.2    10        1      0.2
-//     1.5    10        1      0.2
-//     1.8    10        1      0.2
 //
 var RoundCeil Rounder = roundCeil
 

@@ -1,4 +1,4 @@
-package inf
+package inf_test
 
 import (
 	"bytes"
@@ -7,35 +7,37 @@ import (
 	"math/big"
 	"strings"
 	"testing"
+
+	"speter.net/go/exp/math/dec/inf"
 )
 
-type decFunZZ func(z, x, y *Dec) *Dec
+type decFunZZ func(z, x, y *inf.Dec) *inf.Dec
 type decArgZZ struct {
-	z, x, y *Dec
+	z, x, y *inf.Dec
 }
 
 var decSumZZ = []decArgZZ{
-	{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
-	{NewDec(1, 0), NewDec(1, 0), NewDec(0, 0)},
-	{NewDec(1111111110, 0), NewDec(123456789, 0), NewDec(987654321, 0)},
-	{NewDec(-1, 0), NewDec(-1, 0), NewDec(0, 0)},
-	{NewDec(864197532, 0), NewDec(-123456789, 0), NewDec(987654321, 0)},
-	{NewDec(-1111111110, 0), NewDec(-123456789, 0), NewDec(-987654321, 0)},
-	{NewDec(12, 2), NewDec(1, 1), NewDec(2, 2)},
+	{inf.NewDec(0, 0), inf.NewDec(0, 0), inf.NewDec(0, 0)},
+	{inf.NewDec(1, 0), inf.NewDec(1, 0), inf.NewDec(0, 0)},
+	{inf.NewDec(1111111110, 0), inf.NewDec(123456789, 0), inf.NewDec(987654321, 0)},
+	{inf.NewDec(-1, 0), inf.NewDec(-1, 0), inf.NewDec(0, 0)},
+	{inf.NewDec(864197532, 0), inf.NewDec(-123456789, 0), inf.NewDec(987654321, 0)},
+	{inf.NewDec(-1111111110, 0), inf.NewDec(-123456789, 0), inf.NewDec(-987654321, 0)},
+	{inf.NewDec(12, 2), inf.NewDec(1, 1), inf.NewDec(2, 2)},
 }
 
 var decProdZZ = []decArgZZ{
-	{NewDec(0, 0), NewDec(0, 0), NewDec(0, 0)},
-	{NewDec(0, 0), NewDec(1, 0), NewDec(0, 0)},
-	{NewDec(1, 0), NewDec(1, 0), NewDec(1, 0)},
-	{NewDec(-991*991, 0), NewDec(991, 0), NewDec(-991, 0)},
-	{NewDec(2, 3), NewDec(1, 1), NewDec(2, 2)},
-	{NewDec(2, -3), NewDec(1, -1), NewDec(2, -2)},
-	{NewDec(2, 3), NewDec(1, 1), NewDec(2, 2)},
+	{inf.NewDec(0, 0), inf.NewDec(0, 0), inf.NewDec(0, 0)},
+	{inf.NewDec(0, 0), inf.NewDec(1, 0), inf.NewDec(0, 0)},
+	{inf.NewDec(1, 0), inf.NewDec(1, 0), inf.NewDec(1, 0)},
+	{inf.NewDec(-991*991, 0), inf.NewDec(991, 0), inf.NewDec(-991, 0)},
+	{inf.NewDec(2, 3), inf.NewDec(1, 1), inf.NewDec(2, 2)},
+	{inf.NewDec(2, -3), inf.NewDec(1, -1), inf.NewDec(2, -2)},
+	{inf.NewDec(2, 3), inf.NewDec(1, 1), inf.NewDec(2, 2)},
 }
 
 func TestDecSignZ(t *testing.T) {
-	var zero Dec
+	var zero inf.Dec
 	for _, a := range decSumZZ {
 		s := a.z.Sign()
 		e := a.z.Cmp(&zero)
@@ -46,11 +48,11 @@ func TestDecSignZ(t *testing.T) {
 }
 
 func TestDecAbsZ(t *testing.T) {
-	var zero Dec
+	var zero inf.Dec
 	for _, a := range decSumZZ {
-		var z Dec
+		var z inf.Dec
 		z.Abs(a.z)
-		var e Dec
+		var e inf.Dec
 		e.Set(a.z)
 		if e.Cmp(&zero) < 0 {
 			e.Sub(&zero, &e)
@@ -62,7 +64,7 @@ func TestDecAbsZ(t *testing.T) {
 }
 
 func testDecFunZZ(t *testing.T, msg string, f decFunZZ, a decArgZZ) {
-	var z Dec
+	var z inf.Dec
 	f(&z, a.x, a.y)
 	if (&z).Cmp(a.z) != 0 {
 		t.Errorf("%s%+v\n\tgot z = %v; want %v", msg, a, &z, a.z)
@@ -70,8 +72,8 @@ func testDecFunZZ(t *testing.T, msg string, f decFunZZ, a decArgZZ) {
 }
 
 func TestDecSumZZ(t *testing.T) {
-	AddZZ := func(z, x, y *Dec) *Dec { return z.Add(x, y) }
-	SubZZ := func(z, x, y *Dec) *Dec { return z.Sub(x, y) }
+	AddZZ := func(z, x, y *inf.Dec) *inf.Dec { return z.Add(x, y) }
+	SubZZ := func(z, x, y *inf.Dec) *inf.Dec { return z.Sub(x, y) }
 	for _, a := range decSumZZ {
 		arg := a
 		testDecFunZZ(t, "AddZZ", AddZZ, arg)
@@ -88,7 +90,7 @@ func TestDecSumZZ(t *testing.T) {
 }
 
 func TestDecProdZZ(t *testing.T) {
-	MulZZ := func(z, x, y *Dec) *Dec { return z.Mul(x, y) }
+	MulZZ := func(z, x, y *inf.Dec) *inf.Dec { return z.Mul(x, y) }
 	for _, a := range decProdZZ {
 		arg := a
 		testDecFunZZ(t, "MulZZ", MulZZ, arg)
@@ -98,51 +100,17 @@ func TestDecProdZZ(t *testing.T) {
 	}
 }
 
-var decQuoRemZZZ = []struct {
-	z, x, y  *Dec
-	r        *big.Rat
-	srA, srB int
-}{
-	// basic examples
-	{NewDec(1, 0), NewDec(2, 0), NewDec(2, 0), big.NewRat(0, 1), 0, 1},
-	{NewDec(15, 1), NewDec(3, 0), NewDec(2, 0), big.NewRat(0, 1), 0, 1},
-	{NewDec(1, 1), NewDec(1, 0), NewDec(10, 0), big.NewRat(0, 1), 0, 1},
-	{NewDec(0, 0), NewDec(2, 0), NewDec(3, 0), big.NewRat(2, 3), 1, 1},
-	{NewDec(0, 0), NewDec(2, 0), NewDec(6, 0), big.NewRat(1, 3), 1, 1},
-	{NewDec(1, 1), NewDec(2, 0), NewDec(12, 0), big.NewRat(2, 3), 1, 1},
-
-	// examples from the Go Language Specification
-	{NewDec(1, 0), NewDec(5, 0), NewDec(3, 0), big.NewRat(2, 3), 1, 1},
-	{NewDec(-1, 0), NewDec(-5, 0), NewDec(3, 0), big.NewRat(-2, 3), -1, 1},
-	{NewDec(-1, 0), NewDec(5, 0), NewDec(-3, 0), big.NewRat(-2, 3), 1, -1},
-	{NewDec(1, 0), NewDec(-5, 0), NewDec(-3, 0), big.NewRat(2, 3), -1, -1},
-}
-
-func TestDecQuoRem(t *testing.T) {
-	for i, a := range decQuoRemZZZ {
-		z, rA, rB := new(Dec), new(big.Int), new(big.Int)
-		s := scaleQuoExact{}.Scale(a.x, a.y)
-		z.quoRem(a.x, a.y, s, true, rA, rB)
-		if a.z.Cmp(z) != 0 || a.r.Cmp(new(big.Rat).SetFrac(rA, rB)) != 0 {
-			t.Errorf("#%d QuoRemZZZ got %v, %v, %v; expected %v, %v", i, z, rA, rB, a.z, a.r)
-		}
-		if a.srA != rA.Sign() || a.srB != rB.Sign() {
-			t.Errorf("#%d QuoRemZZZ wrong signs, got %v, %v; expected %v, %v", i, rA.Sign(), rB.Sign(), a.srA, a.srB)
-		}
-	}
-}
-
 var decUnscaledTests = []struct {
-	d  *Dec
+	d  *inf.Dec
 	u  int64 // ignored when ok == false
 	ok bool
 }{
-	{new(Dec), 0, true},
-	{NewDec(-1<<63, 0), -1 << 63, true},
-	{NewDec(-(-1<<63 + 1), 0), -(-1<<63 + 1), true},
-	{new(Dec).Neg(NewDec(-1<<63, 0)), 0, false},
-	{new(Dec).Sub(NewDec(-1<<63, 0), NewDec(1, 0)), 0, false},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), 0, false},
+	{new(inf.Dec), 0, true},
+	{inf.NewDec(-1<<63, 0), -1 << 63, true},
+	{inf.NewDec(-(-1<<63 + 1), 0), -(-1<<63 + 1), true},
+	{new(inf.Dec).Neg(inf.NewDec(-1<<63, 0)), 0, false},
+	{new(inf.Dec).Sub(inf.NewDec(-1<<63, 0), inf.NewDec(1, 0)), 0, false},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), 0, false},
 }
 
 func TestDecUnscaled(t *testing.T) {
@@ -157,26 +125,26 @@ func TestDecUnscaled(t *testing.T) {
 }
 
 var decRoundTests = [...]struct {
-	in  *Dec
-	s   Scale
-	r   Rounder
-	exp *Dec
+	in  *inf.Dec
+	s   inf.Scale
+	r   inf.Rounder
+	exp *inf.Dec
 }{
-	{NewDec(123424999999999993, 15), 2, RoundHalfUp, NewDec(12342, 2)},
-	{NewDec(123425000000000001, 15), 2, RoundHalfUp, NewDec(12343, 2)},
-	{NewDec(123424999999999993, 15), 15, RoundHalfUp, NewDec(123424999999999993, 15)},
-	{NewDec(123424999999999993, 15), 16, RoundHalfUp, NewDec(1234249999999999930, 16)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -1, RoundHalfUp, NewDec(1844674407370955162, -1)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -2, RoundHalfUp, NewDec(184467440737095516, -2)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -3, RoundHalfUp, NewDec(18446744073709552, -3)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -4, RoundHalfUp, NewDec(1844674407370955, -4)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -5, RoundHalfUp, NewDec(184467440737096, -5)},
-	{NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -6, RoundHalfUp, NewDec(18446744073710, -6)},
+	{inf.NewDec(123424999999999993, 15), 2, inf.RoundHalfUp, inf.NewDec(12342, 2)},
+	{inf.NewDec(123425000000000001, 15), 2, inf.RoundHalfUp, inf.NewDec(12343, 2)},
+	{inf.NewDec(123424999999999993, 15), 15, inf.RoundHalfUp, inf.NewDec(123424999999999993, 15)},
+	{inf.NewDec(123424999999999993, 15), 16, inf.RoundHalfUp, inf.NewDec(1234249999999999930, 16)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -1, inf.RoundHalfUp, inf.NewDec(1844674407370955162, -1)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -2, inf.RoundHalfUp, inf.NewDec(184467440737095516, -2)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -3, inf.RoundHalfUp, inf.NewDec(18446744073709552, -3)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -4, inf.RoundHalfUp, inf.NewDec(1844674407370955, -4)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -5, inf.RoundHalfUp, inf.NewDec(184467440737096, -5)},
+	{inf.NewDecBig(new(big.Int).Lsh(big.NewInt(1), 64), 0), -6, inf.RoundHalfUp, inf.NewDec(18446744073710, -6)},
 }
 
 func TestDecRound(t *testing.T) {
 	for i, tt := range decRoundTests {
-		z := new(Dec).Round(tt.in, tt.s, tt.r)
+		z := new(inf.Dec).Round(tt.in, tt.s, tt.r)
 		if tt.exp.Cmp(z) != 0 {
 			t.Errorf("#%d Round got %v; expected %v", i, z, tt.exp)
 		}
@@ -187,7 +155,7 @@ var decStringTests = []struct {
 	in     string
 	out    string
 	val    int64
-	scale  Scale // skip SetString if negative
+	scale  inf.Scale // skip SetString if negative
 	ok     bool
 	scanOk bool
 }{
@@ -240,7 +208,7 @@ var decStringTests = []struct {
 }
 
 func TestDecGetString(t *testing.T) {
-	z := new(Dec)
+	z := new(inf.Dec)
 	for i, test := range decStringTests {
 		if !test.ok {
 			continue
@@ -261,7 +229,7 @@ func TestDecGetString(t *testing.T) {
 }
 
 func TestDecSetString(t *testing.T) {
-	tmp := new(Dec)
+	tmp := new(inf.Dec)
 	for i, test := range decStringTests {
 		if test.scale < 0 {
 			// SetString only supports scale >= 0
@@ -269,10 +237,10 @@ func TestDecSetString(t *testing.T) {
 		}
 		// initialize to a non-zero value so that issues with parsing
 		// 0 are detected
-		tmp.Set(NewDec(1234567890, 123))
-		n1, ok1 := new(Dec).SetString(test.in)
+		tmp.Set(inf.NewDec(1234567890, 123))
+		n1, ok1 := new(inf.Dec).SetString(test.in)
 		n2, ok2 := tmp.SetString(test.in)
-		expected := NewDec(test.val, test.scale)
+		expected := inf.NewDec(test.val, test.scale)
 		if ok1 != test.ok || ok2 != test.ok {
 			t.Errorf("#%d (input '%s') ok incorrect (should be %t)", i, test.in, test.ok)
 			continue
@@ -300,7 +268,7 @@ func TestDecSetString(t *testing.T) {
 }
 
 func TestDecScan(t *testing.T) {
-	tmp := new(Dec)
+	tmp := new(inf.Dec)
 	for i, test := range decStringTests {
 		if test.scale < 0 {
 			// SetString only supports scale >= 0
@@ -308,8 +276,8 @@ func TestDecScan(t *testing.T) {
 		}
 		// initialize to a non-zero value so that issues with parsing
 		// 0 are detected
-		tmp.Set(NewDec(1234567890, 123))
-		n1, n2 := new(Dec), tmp
+		tmp.Set(inf.NewDec(1234567890, 123))
+		n1, n2 := new(inf.Dec), tmp
 		nn1, err1 := fmt.Sscan(test.in, n1)
 		nn2, err2 := fmt.Sscan(test.in, n2)
 		if !test.scanOk {
@@ -318,7 +286,7 @@ func TestDecScan(t *testing.T) {
 			}
 			continue
 		}
-		expected := NewDec(test.val, test.scale)
+		expected := inf.NewDec(test.val, test.scale)
 		if nn1 != 1 || err1 != nil || nn2 != 1 || err2 != nil {
 			t.Errorf("#%d (input '%s') error %d %v, %d %v", i, test.in, nn1, err1, nn2, err2)
 			continue
@@ -355,7 +323,7 @@ var decScanNextTests = []struct {
 func TestDecScanNext(t *testing.T) {
 	for i, test := range decScanNextTests {
 		rdr := strings.NewReader(test.in)
-		n1 := new(Dec)
+		n1 := new(inf.Dec)
 		nn1, _ := fmt.Fscan(rdr, n1)
 		if (test.ok && nn1 == 0) || (!test.ok && nn1 > 0) {
 			t.Errorf("#%d (input '%s') ok incorrect should be %t", i, test.in, test.ok)
@@ -385,20 +353,20 @@ func TestDecGobEncoding(t *testing.T) {
 	dec := gob.NewDecoder(&medium)
 	for i, test := range decGobEncodingTests {
 		for j := 0; j < 2; j++ {
-			for k := Scale(-5); k <= 5; k++ {
+			for k := inf.Scale(-5); k <= 5; k++ {
 				medium.Reset() // empty buffer for each test case (in case of failures)
 				stest := test
 				if j != 0 {
 					// negative numbers
 					stest = "-" + test
 				}
-				var tx Dec
+				var tx inf.Dec
 				tx.SetString(stest)
 				tx.SetScale(k) // test with positive, negative, and zero scale
 				if err := enc.Encode(&tx); err != nil {
 					t.Errorf("#%d%c: encoding failed: %s", i, 'a'+j, err)
 				}
-				var rx Dec
+				var rx inf.Dec
 				if err := dec.Decode(&rx); err != nil {
 					t.Errorf("#%d%c: decoding failed: %s", i, 'a'+j, err)
 				}

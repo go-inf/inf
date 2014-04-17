@@ -1,99 +1,101 @@
-package inf
+package inf_test
 
 import (
 	"math/big"
 	"testing"
+
+	"speter.net/go/exp/math/dec/inf"
 )
 
 var decRounderInputs = [...]struct {
-	quo    *Dec
+	quo    *inf.Dec
 	rA, rB *big.Int
 }{
 	// examples from go language spec
-	{NewDec(1, 0), big.NewInt(2), big.NewInt(3)},   //  5 /  3
-	{NewDec(-1, 0), big.NewInt(-2), big.NewInt(3)}, // -5 /  3
-	{NewDec(-1, 0), big.NewInt(2), big.NewInt(-3)}, //  5 / -3
-	{NewDec(1, 0), big.NewInt(-2), big.NewInt(-3)}, // -5 / -3
+	{inf.NewDec(1, 0), big.NewInt(2), big.NewInt(3)},   //  5 /  3
+	{inf.NewDec(-1, 0), big.NewInt(-2), big.NewInt(3)}, // -5 /  3
+	{inf.NewDec(-1, 0), big.NewInt(2), big.NewInt(-3)}, //  5 / -3
+	{inf.NewDec(1, 0), big.NewInt(-2), big.NewInt(-3)}, // -5 / -3
 	// examples from godoc
-	{NewDec(-1, 1), big.NewInt(-8), big.NewInt(10)},
-	{NewDec(-1, 1), big.NewInt(-5), big.NewInt(10)},
-	{NewDec(-1, 1), big.NewInt(-2), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(-8), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(-5), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(-2), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(0), big.NewInt(1)},
-	{NewDec(0, 1), big.NewInt(2), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(5), big.NewInt(10)},
-	{NewDec(0, 1), big.NewInt(8), big.NewInt(10)},
-	{NewDec(1, 1), big.NewInt(2), big.NewInt(10)},
-	{NewDec(1, 1), big.NewInt(5), big.NewInt(10)},
-	{NewDec(1, 1), big.NewInt(8), big.NewInt(10)},
+	{inf.NewDec(-1, 1), big.NewInt(-8), big.NewInt(10)},
+	{inf.NewDec(-1, 1), big.NewInt(-5), big.NewInt(10)},
+	{inf.NewDec(-1, 1), big.NewInt(-2), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(-8), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(-5), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(-2), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(0), big.NewInt(1)},
+	{inf.NewDec(0, 1), big.NewInt(2), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(5), big.NewInt(10)},
+	{inf.NewDec(0, 1), big.NewInt(8), big.NewInt(10)},
+	{inf.NewDec(1, 1), big.NewInt(2), big.NewInt(10)},
+	{inf.NewDec(1, 1), big.NewInt(5), big.NewInt(10)},
+	{inf.NewDec(1, 1), big.NewInt(8), big.NewInt(10)},
 }
 
 var decRounderResults = [...]struct {
-	rounder Rounder
-	results [len(decRounderInputs)]*Dec
+	rounder inf.Rounder
+	results [len(decRounderInputs)]*inf.Dec
 }{
-	{RoundExact, [...]*Dec{nil, nil, nil, nil,
+	{inf.RoundExact, [...]*inf.Dec{nil, nil, nil, nil,
 		nil, nil, nil, nil, nil, nil,
-		NewDec(0, 1), nil, nil, nil, nil, nil, nil}},
-	{RoundDown, [...]*Dec{
-		NewDec(1, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(1, 0),
-		NewDec(-1, 1), NewDec(-1, 1), NewDec(-1, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(0, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(1, 1), NewDec(1, 1), NewDec(1, 1)}},
-	{RoundUp, [...]*Dec{
-		NewDec(2, 0), NewDec(-2, 0), NewDec(-2, 0), NewDec(2, 0),
-		NewDec(-2, 1), NewDec(-2, 1), NewDec(-2, 1),
-		NewDec(-1, 1), NewDec(-1, 1), NewDec(-1, 1),
-		NewDec(0, 1),
-		NewDec(1, 1), NewDec(1, 1), NewDec(1, 1),
-		NewDec(2, 1), NewDec(2, 1), NewDec(2, 1)}},
-	{RoundHalfDown, [...]*Dec{
-		NewDec(2, 0), NewDec(-2, 0), NewDec(-2, 0), NewDec(2, 0),
-		NewDec(-2, 1), NewDec(-1, 1), NewDec(-1, 1),
-		NewDec(-1, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(0, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(1, 1),
-		NewDec(1, 1), NewDec(1, 1), NewDec(2, 1)}},
-	{RoundHalfUp, [...]*Dec{
-		NewDec(2, 0), NewDec(-2, 0), NewDec(-2, 0), NewDec(2, 0),
-		NewDec(-2, 1), NewDec(-2, 1), NewDec(-1, 1),
-		NewDec(-1, 1), NewDec(-1, 1), NewDec(0, 1),
-		NewDec(0, 1),
-		NewDec(0, 1), NewDec(1, 1), NewDec(1, 1),
-		NewDec(1, 1), NewDec(2, 1), NewDec(2, 1)}},
-	{RoundHalfEven, [...]*Dec{
-		NewDec(2, 0), NewDec(-2, 0), NewDec(-2, 0), NewDec(2, 0),
-		NewDec(-2, 1), NewDec(-2, 1), NewDec(-1, 1),
-		NewDec(-1, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(0, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(1, 1),
-		NewDec(1, 1), NewDec(2, 1), NewDec(2, 1)}},
-	{RoundFloor, [...]*Dec{
-		NewDec(1, 0), NewDec(-2, 0), NewDec(-2, 0), NewDec(1, 0),
-		NewDec(-2, 1), NewDec(-2, 1), NewDec(-2, 1),
-		NewDec(-1, 1), NewDec(-1, 1), NewDec(-1, 1),
-		NewDec(0, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(1, 1), NewDec(1, 1), NewDec(1, 1)}},
-	{RoundCeil, [...]*Dec{
-		NewDec(2, 0), NewDec(-1, 0), NewDec(-1, 0), NewDec(2, 0),
-		NewDec(-1, 1), NewDec(-1, 1), NewDec(-1, 1),
-		NewDec(0, 1), NewDec(0, 1), NewDec(0, 1),
-		NewDec(0, 1),
-		NewDec(1, 1), NewDec(1, 1), NewDec(1, 1),
-		NewDec(2, 1), NewDec(2, 1), NewDec(2, 1)}},
+		inf.NewDec(0, 1), nil, nil, nil, nil, nil, nil}},
+	{inf.RoundDown, [...]*inf.Dec{
+		inf.NewDec(1, 0), inf.NewDec(-1, 0), inf.NewDec(-1, 0), inf.NewDec(1, 0),
+		inf.NewDec(-1, 1), inf.NewDec(-1, 1), inf.NewDec(-1, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(1, 1), inf.NewDec(1, 1), inf.NewDec(1, 1)}},
+	{inf.RoundUp, [...]*inf.Dec{
+		inf.NewDec(2, 0), inf.NewDec(-2, 0), inf.NewDec(-2, 0), inf.NewDec(2, 0),
+		inf.NewDec(-2, 1), inf.NewDec(-2, 1), inf.NewDec(-2, 1),
+		inf.NewDec(-1, 1), inf.NewDec(-1, 1), inf.NewDec(-1, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(1, 1), inf.NewDec(1, 1), inf.NewDec(1, 1),
+		inf.NewDec(2, 1), inf.NewDec(2, 1), inf.NewDec(2, 1)}},
+	{inf.RoundHalfDown, [...]*inf.Dec{
+		inf.NewDec(2, 0), inf.NewDec(-2, 0), inf.NewDec(-2, 0), inf.NewDec(2, 0),
+		inf.NewDec(-2, 1), inf.NewDec(-1, 1), inf.NewDec(-1, 1),
+		inf.NewDec(-1, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(1, 1),
+		inf.NewDec(1, 1), inf.NewDec(1, 1), inf.NewDec(2, 1)}},
+	{inf.RoundHalfUp, [...]*inf.Dec{
+		inf.NewDec(2, 0), inf.NewDec(-2, 0), inf.NewDec(-2, 0), inf.NewDec(2, 0),
+		inf.NewDec(-2, 1), inf.NewDec(-2, 1), inf.NewDec(-1, 1),
+		inf.NewDec(-1, 1), inf.NewDec(-1, 1), inf.NewDec(0, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(0, 1), inf.NewDec(1, 1), inf.NewDec(1, 1),
+		inf.NewDec(1, 1), inf.NewDec(2, 1), inf.NewDec(2, 1)}},
+	{inf.RoundHalfEven, [...]*inf.Dec{
+		inf.NewDec(2, 0), inf.NewDec(-2, 0), inf.NewDec(-2, 0), inf.NewDec(2, 0),
+		inf.NewDec(-2, 1), inf.NewDec(-2, 1), inf.NewDec(-1, 1),
+		inf.NewDec(-1, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(1, 1),
+		inf.NewDec(1, 1), inf.NewDec(2, 1), inf.NewDec(2, 1)}},
+	{inf.RoundFloor, [...]*inf.Dec{
+		inf.NewDec(1, 0), inf.NewDec(-2, 0), inf.NewDec(-2, 0), inf.NewDec(1, 0),
+		inf.NewDec(-2, 1), inf.NewDec(-2, 1), inf.NewDec(-2, 1),
+		inf.NewDec(-1, 1), inf.NewDec(-1, 1), inf.NewDec(-1, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(1, 1), inf.NewDec(1, 1), inf.NewDec(1, 1)}},
+	{inf.RoundCeil, [...]*inf.Dec{
+		inf.NewDec(2, 0), inf.NewDec(-1, 0), inf.NewDec(-1, 0), inf.NewDec(2, 0),
+		inf.NewDec(-1, 1), inf.NewDec(-1, 1), inf.NewDec(-1, 1),
+		inf.NewDec(0, 1), inf.NewDec(0, 1), inf.NewDec(0, 1),
+		inf.NewDec(0, 1),
+		inf.NewDec(1, 1), inf.NewDec(1, 1), inf.NewDec(1, 1),
+		inf.NewDec(2, 1), inf.NewDec(2, 1), inf.NewDec(2, 1)}},
 }
 
 func TestDecRounders(t *testing.T) {
 	for i, a := range decRounderResults {
 		for j, input := range decRounderInputs {
-			q := new(Dec).Set(input.quo)
+			q := new(inf.Dec).Set(input.quo)
 			rA, rB := new(big.Int).Set(input.rA), new(big.Int).Set(input.rB)
-			res := a.rounder.Round(new(Dec), q, rA, rB)
+			res := a.rounder.Round(new(inf.Dec), q, rA, rB)
 			if a.results[j] == nil && res == nil {
 				continue
 			}

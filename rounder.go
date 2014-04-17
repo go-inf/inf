@@ -12,6 +12,24 @@ import (
 //
 type Rounder rounder
 
+// See http://speleotrove.com/decimal/damodel.html#refround for more detailed
+// definitions of these rounding modes.
+var (
+	RoundDown     Rounder // towards 0
+	RoundUp       Rounder // away from 0
+	RoundFloor    Rounder // towards -infinity
+	RoundCeil     Rounder // towards +infinity
+	RoundHalfDown Rounder // to nearest; towards 0 if same distance
+	RoundHalfUp   Rounder // to nearest; away from 0 if same distance
+	RoundHalfEven Rounder // to nearest; even last digit if same distance
+)
+
+// RoundExact is to be used in the case when rounding is not necessary.
+// When used with Quo or Round, it returns the result verbatim when it can be
+// expressed exactly with the given precision, and it returns nil otherwise.
+// QuoExact is a shorthand for using Quo with RoundExact.
+var RoundExact Rounder
+
 type rounder interface {
 
 	// When UseRemainder() returns true, the Round() method is passed the
@@ -46,72 +64,7 @@ func (r rndr) Round(z, quo *Dec, remNum, remDen *big.Int) *Dec {
 	return r.round(z, quo, remNum, remDen)
 }
 
-// RoundExact returns quo if rem is zero, or nil otherwise. It is intended to
-// be used with ScaleQuoExact when it is guaranteed that the result can be
-// obtained without rounding. QuoExact is a shorthand for such a quotient
-// operation.
-//
-var RoundExact Rounder = roundExact
-
-// RoundDown rounds towards 0; that is, returns the Dec with the greatest
-// absolute value not exceeding that of the result represented by quo and rem.
-//
-var RoundDown Rounder = roundDown
-
-// RoundUp rounds away from 0; that is, returns the Dec with the smallest
-// absolute value not smaller than that of the result represented by quo and
-// rem.
-//
-var RoundUp Rounder = roundUp
-
-// RoundHalfDown rounds to the nearest Dec, and when the remainder is 1/2, it
-// rounds to the Dec with the lower absolute value.
-//
-var RoundHalfDown Rounder = roundHalfDown
-
-// RoundHalfUp rounds to the nearest Dec, and when the remainder is 1/2, it
-// rounds to the Dec with the greater absolute value.
-//
-var RoundHalfUp Rounder = roundHalfUp
-
-// RoundHalfEven rounds to the nearest Dec, and when the remainder is 1/2, it
-// rounds to the Dec with even last digit.
-//
-var RoundHalfEven Rounder = roundHalfEven
-
-// RoundFloor rounds towards negative infinity; that is, returns the greatest
-// Dec not exceeding the result represented by quo and rem.
-//
-var RoundFloor Rounder = roundFloor
-
-// RoundCeil rounds towards positive infinity; that is, returns the
-// smallest Dec not smaller than the result represented by quo and rem.
-//
-var RoundCeil Rounder = roundCeil
-
 var intSign = []*big.Int{big.NewInt(-1), big.NewInt(0), big.NewInt(1)}
-
-var roundExact = rndr{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		if rA.Sign() != 0 {
-			return nil
-		}
-		return z.Set(q)
-	}}
-
-var roundDown = rndr{false,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		return z.Set(q)
-	}}
-
-var roundUp = rndr{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.Set(q)
-		if rA.Sign() != 0 {
-			z.UnscaledBig().Add(z.UnscaledBig(), intSign[rA.Sign()*rB.Sign()+1])
-		}
-		return z
-	}}
 
 func roundHalf(f func(c int, odd uint) (roundUp bool)) func(z, q *Dec, rA, rB *big.Int) *Dec {
 	return func(z, q *Dec, rA, rB *big.Int) *Dec {
@@ -141,35 +94,52 @@ func roundHalf(f func(c int, odd uint) (roundUp bool)) func(z, q *Dec, rA, rB *b
 	}
 }
 
-var roundHalfDown = rndr{true, roundHalf(
-	func(c int, odd uint) bool {
-		return c > 0
-	})}
-
-var roundHalfUp = rndr{true, roundHalf(
-	func(c int, odd uint) bool {
-		return c >= 0
-	})}
-
-var roundHalfEven = rndr{true, roundHalf(
-	func(c int, odd uint) bool {
-		return c > 0 || c == 0 && odd == 1
-	})}
-
-var roundFloor = rndr{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.Set(q)
-		if rA.Sign()*rB.Sign() < 0 {
-			z.UnscaledBig().Add(z.UnscaledBig(), intSign[0])
-		}
-		return z
-	}}
-
-var roundCeil = rndr{true,
-	func(z, q *Dec, rA, rB *big.Int) *Dec {
-		z.Set(q)
-		if rA.Sign()*rB.Sign() > 0 {
-			z.UnscaledBig().Add(z.UnscaledBig(), intSign[2])
-		}
-		return z
-	}}
+func init() {
+	RoundExact = rndr{true,
+		func(z, q *Dec, rA, rB *big.Int) *Dec {
+			if rA.Sign() != 0 {
+				return nil
+			}
+			return z.Set(q)
+		}}
+	RoundDown = rndr{false,
+		func(z, q *Dec, rA, rB *big.Int) *Dec {
+			return z.Set(q)
+		}}
+	RoundUp = rndr{true,
+		func(z, q *Dec, rA, rB *big.Int) *Dec {
+			z.Set(q)
+			if rA.Sign() != 0 {
+				z.UnscaledBig().Add(z.UnscaledBig(), intSign[rA.Sign()*rB.Sign()+1])
+			}
+			return z
+		}}
+	RoundFloor = rndr{true,
+		func(z, q *Dec, rA, rB *big.Int) *Dec {
+			z.Set(q)
+			if rA.Sign()*rB.Sign() < 0 {
+				z.UnscaledBig().Add(z.UnscaledBig(), intSign[0])
+			}
+			return z
+		}}
+	RoundCeil = rndr{true,
+		func(z, q *Dec, rA, rB *big.Int) *Dec {
+			z.Set(q)
+			if rA.Sign()*rB.Sign() > 0 {
+				z.UnscaledBig().Add(z.UnscaledBig(), intSign[2])
+			}
+			return z
+		}}
+	RoundHalfDown = rndr{true, roundHalf(
+		func(c int, odd uint) bool {
+			return c > 0
+		})}
+	RoundHalfUp = rndr{true, roundHalf(
+		func(c int, odd uint) bool {
+			return c >= 0
+		})}
+	RoundHalfEven = rndr{true, roundHalf(
+		func(c int, odd uint) bool {
+			return c > 0 || c == 0 && odd == 1
+		})}
+}

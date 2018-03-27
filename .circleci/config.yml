@@ -4,6 +4,8 @@ test: &test
   working_directory: /go/src/gopkg.in/inf.v0
   steps:
     - checkout
+    - run: go version
+    - run: go env
     - run: go get -v -t ./...
     - run: go test -v ./...
 

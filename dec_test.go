@@ -11,10 +11,12 @@ import (
 	"gopkg.in/inf.v0"
 )
 
-type decFunZZ func(z, x, y *inf.Dec) *inf.Dec
-type decArgZZ struct {
-	z, x, y *inf.Dec
-}
+type (
+	decFunZZ func(z, x, y *inf.Dec) *inf.Dec
+	decArgZZ struct {
+		z, x, y *inf.Dec
+	}
+)
 
 var decSumZZ = []decArgZZ{
 	{inf.NewDec(0, 0), inf.NewDec(0, 0), inf.NewDec(0, 0)},
@@ -203,8 +205,12 @@ var decStringTests = []struct {
 	{"-10", "-10", -10, 0, true, true},
 	{"+10", "10", 10, 0, true, true},
 	{"00", "0", 0, 0, true, true},
-	{"023", "23", 23, 0, true, true},      // decimal, not octal
-	{"-02.3", "-2.3", -23, 1, true, true}, // decimal, not octal
+	{"023", "23", 23, 0, true, true},           // decimal, not octal
+	{"-02.3", "-2.3", -23, 1, true, true},      // decimal, not octal
+	{"2.3e1", "23", 23, 0, true, true},         // decimal, not octal
+	{"-02.3e0", "-2.3", -23, 1, true, true},    // decimal, not octal
+	{"2.3e2", "230", 230, 0, true, true},       // decimal, not octal
+	{"-02.3e-2", "-0.023", -23, 3, true, true}, // decimal, not octal
 }
 
 func TestDecGetString(t *testing.T) {
